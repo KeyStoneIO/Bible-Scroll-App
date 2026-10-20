@@ -1,6 +1,7 @@
 /**
- * Bible Scroll App - Version 2 (Cinematic Video Scroll Edition)
- * Continuous Smooth Rolling Scripture Reader synced with Tamil & English Audio
+ * Bible Scroll App - Full New Testament Edition
+ * Continuous Smooth Rolling Scripture Reader (27 Books, 260 Chapters)
+ * Powered by Tamil New Testament Audio Narration & English KJV Reference
  */
 
 (function () {
@@ -8,12 +9,12 @@
 
   // --- State Configuration ---
   const state = {
-    chapter: 1,
+    bookId: 1,                // 1 to 27 (Matthew to Revelation)
+    chapter: 1,               // 1 to currentBook.total_chapters
     activeVerseNum: null,
     isPlaying: false,
     viewMode: 'scroll',       // 'scroll' (Cinematic Roll) | 'cards' (Cards View)
     displayMode: 'tamil',     // 'tamil' | 'english' | 'parallel'
-    audioTrack: 'ta',         // 'ta' (Tamil narration) | 'en' (English narration)
     rollMode: 'steady',       // 'steady' (Constant tempo for entire audio) | 'glide' (Synced smooth glide)
     playbackRate: 1.0,
     volume: 1.0,
@@ -35,9 +36,16 @@
     scrollCanvas: document.getElementById('scrollCanvas'),
     versesStream: document.getElementById('versesStream'),
     
-    // Header & Modals
+    // Header Buttons & Selectors
+    bookSelectBtn: document.getElementById('bookSelectBtn'),
+    bookSelectLabel: document.getElementById('bookSelectLabel'),
     chapterSelectBtn: document.getElementById('chapterSelectBtn'),
     chapterSelectLabel: document.getElementById('chapterSelectLabel'),
+    
+    bookModal: document.getElementById('bookModal'),
+    bookCategoryList: document.getElementById('bookCategoryList'),
+    closeBookModalBtn: document.getElementById('closeBookModalBtn'),
+    
     chapterModal: document.getElementById('chapterModal'),
     chapterGrid: document.getElementById('chapterGrid'),
     closeChapterModalBtn: document.getElementById('closeChapterModalBtn'),
@@ -48,21 +56,18 @@
     btnModeEnglish: document.getElementById('btnModeEnglish'),
     btnModeParallel: document.getElementById('btnModeParallel'),
     btnFullscreenToggle: document.getElementById('btnFullscreenToggle'),
-    fullscreenIcon: document.getElementById('fullscreenIcon'),
     
     // Subheader Banner
     bannerAudioLabel: document.getElementById('bannerAudioLabel'),
-    btnTrackTamil: document.getElementById('btnTrackTamil'),
-    btnTrackEnglish: document.getElementById('btnTrackEnglish'),
     btnRollModeToggle: document.getElementById('btnRollModeToggle'),
     rollModeLabel: document.getElementById('rollModeLabel'),
     
-    // Scroll Titles
+    // Scroll Header Titles
     scrollTitleTa: document.getElementById('scrollTitleTa'),
     scrollSubTa: document.getElementById('scrollSubTa'),
     scrollTitleEn: document.getElementById('scrollTitleEn'),
     
-    // Resume Roll Pill
+    // Resume Roll Banner & Guide
     resumeRollBanner: document.getElementById('resumeRollBanner'),
     btnResumeRoll: document.getElementById('btnResumeRoll'),
     focalReadingGuide: document.getElementById('focalReadingGuide'),
@@ -76,15 +81,15 @@
     playerProgressWrap: document.getElementById('playerProgressWrap'),
     playerProgressBar: document.getElementById('playerProgressBar'),
     playerBufferedBar: document.getElementById('playerBufferedBar'),
-    playerTrackNum: document.getElementById('playerTrackNum'),
+    playerTrackArt: document.getElementById('playerTrackArt'),
     playerTrackTitle: document.getElementById('playerTrackTitle'),
     playerVersePill: document.getElementById('playerVersePill'),
     playerCurTime: document.getElementById('playerCurTime'),
     playerTotTime: document.getElementById('playerTotTime'),
     
     btnScrollToggle: document.getElementById('btnScrollToggle'),
-    btnPrevVerse: document.getElementById('btnPrevVerse'),
-    btnNextVerse: document.getElementById('btnNextVerse'),
+    btnPrevChapter: document.getElementById('btnPrevChapter'),
+    btnNextChapter: document.getElementById('btnNextChapter'),
     btnRewind10: document.getElementById('btnRewind10'),
     btnPlayPause: document.getElementById('btnPlayPause'),
     btnForward10: document.getElementById('btnForward10'),
@@ -117,7 +122,7 @@
     toast: document.getElementById('toastNotice')
   };
 
-  // --- Utilities ---
+  // --- Helpers ---
   function formatTime(seconds) {
     if (isNaN(seconds) || seconds < 0) return '0:00';
     const m = Math.floor(seconds / 60);
@@ -134,7 +139,7 @@
     }, duration);
   }
 
-  // --- Storage ---
+  // --- State Persistence ---
   function loadPersistedState() {
     try {
       const savedTheme = localStorage.getItem('biblescroll_theme');
@@ -143,17 +148,19 @@
       const savedMode = localStorage.getItem('biblescroll_mode');
       if (savedMode) state.displayMode = savedMode;
 
-      const savedTrack = localStorage.getItem('biblescroll_track');
-      if (savedTrack) state.audioTrack = savedTrack;
-
       const savedRoll = localStorage.getItem('biblescroll_rollmode');
       if (savedRoll) state.rollMode = savedRoll;
 
       const savedView = localStorage.getItem('biblescroll_view');
       if (savedView) state.viewMode = savedView;
 
+      const savedBook = localStorage.getItem('biblescroll_book');
+      if (savedBook && window.NT_DATA[savedBook]) {
+        state.bookId = parseInt(savedBook, 10);
+      }
+
       const savedChapter = localStorage.getItem('biblescroll_ch');
-      if (savedChapter && window.HEBREWS_DATA[savedChapter]) {
+      if (savedChapter) {
         state.chapter = parseInt(savedChapter, 10);
       }
 
@@ -164,67 +171,66 @@
     }
   }
 
+  function getCurrentBook() {
+    return window.NT_DATA[String(state.bookId)] || window.NT_DATA["1"];
+  }
+
   function getCurrentChapterData() {
-    return window.HEBREWS_DATA[String(state.chapter)];
+    const book = getCurrentBook();
+    return book.chapters[String(state.chapter)] || book.chapters["1"];
   }
 
   // --- Audio Track Setup ---
-  function getAudioUrl() {
-    const chData = getCurrentChapterData();
-    if (!chData) return '';
-    if (state.audioTrack === 'en') {
-      return chData.audio_en_cdn;
-    }
-    return chData.audio_ta;
-  }
-
   function setupAudio() {
-    const audioUrl = getAudioUrl();
     const chData = getCurrentChapterData();
+    const book = getCurrentBook();
+    if (!chData) return;
 
-    el.audio.src = audioUrl;
+    el.audio.src = chData.audio_url;
     el.audio.playbackRate = state.playbackRate;
     el.audio.volume = state.volume;
 
     if (el.bannerAudioLabel) {
-      el.bannerAudioLabel.textContent = state.audioTrack === 'ta'
-        ? `Tamil Narration (WordProject) — Ch ${chData.chapter}`
-        : `English Narration (KJV) — Ch ${chData.chapter}`;
+      el.bannerAudioLabel.textContent = `Tamil Narration • ${book.name_ta} (${book.name_en}) ${chData.chapter}`;
     }
 
-    // Audio error fallback
     el.audio.onerror = () => {
-      console.warn('Local audio error, switching to CDN stream:', el.audio.src);
-      if (state.audioTrack === 'ta' && el.audio.src !== chData.audio_ta_cdn) {
-        el.audio.src = chData.audio_ta_cdn;
-        if (state.isPlaying) el.audio.play().catch(console.error);
-        if (el.bannerAudioLabel) el.bannerAudioLabel.textContent = `Tamil CDN Audio — Ch ${chData.chapter}`;
-      }
+      console.warn('Audio load error for:', el.audio.src);
+      showToast('Audio file loading, please check path');
     };
   }
 
   // --- Render Chapter Verses ---
   function renderChapter() {
+    const book = getCurrentBook();
     const chData = getCurrentChapterData();
-    if (!chData) return;
+    if (!book || !chData) return;
 
-    // Update Headers
-    if (el.chapterSelectLabel) el.chapterSelectLabel.textContent = `Hebrews ${chData.chapter} (${chData.book_ta} ${chData.chapter})`;
-    if (el.scrollTitleTa) el.scrollTitleTa.textContent = `எபிரெயர் ${chData.chapter}`;
-    if (el.scrollSubTa) el.scrollSubTa.textContent = chData.title_ta;
-    if (el.scrollTitleEn) el.scrollTitleEn.textContent = `Hebrews ${chData.chapter} — ${chData.title_en}`;
-    
-    // Player Meta
-    if (el.playerTrackNum) el.playerTrackNum.textContent = `Heb ${chData.chapter}`;
-    if (el.playerTrackTitle) el.playerTrackTitle.textContent = `${chData.book_ta} ${chData.chapter} - ${chData.title_ta}`;
+    // Header Selectors
+    if (el.bookSelectLabel) el.bookSelectLabel.textContent = `${book.name_ta} • ${book.name_en}`;
+    if (el.chapterSelectLabel) el.chapterSelectLabel.textContent = `அதிகாரம் ${chData.chapter} (Ch ${chData.chapter})`;
+
+    // Scroll Header
+    if (el.scrollTitleTa) el.scrollTitleTa.textContent = `${book.name_ta} ${chData.chapter}`;
+    if (el.scrollSubTa) el.scrollSubTa.textContent = `${book.category_ta} • ${book.name_en} ${chData.chapter}`;
+    if (el.scrollTitleEn) el.scrollTitleEn.textContent = `${book.name_en} Chapter ${chData.chapter} (King James Version)`;
+
+    // Player Track Meta
+    if (el.playerTrackArt) el.playerTrackArt.textContent = book.code || 'NT';
+    if (el.playerTrackTitle) el.playerTrackTitle.textContent = `${book.name_ta} ${chData.chapter} — ${book.name_en} ${chData.chapter}`;
     if (el.playerVersePill) el.playerVersePill.textContent = 'Verse 1';
     if (el.playerTotTime) el.playerTotTime.textContent = formatTime(chData.duration);
 
     // Prev / Next button states
-    if (el.btnOutroPrev) el.btnOutroPrev.disabled = chData.chapter <= 1;
-    if (el.btnOutroNext) el.btnOutroNext.disabled = chData.chapter >= 13;
+    const isFirstChapterOverall = (state.bookId === 1 && state.chapter === 1);
+    const isLastChapterOverall = (state.bookId === 27 && state.chapter === book.total_chapters);
 
-    // Render Verse Roll Items
+    if (el.btnOutroPrev) el.btnOutroPrev.disabled = isFirstChapterOverall;
+    if (el.btnOutroNext) el.btnOutroNext.disabled = isLastChapterOverall;
+    if (el.btnPrevChapter) el.btnPrevChapter.disabled = isFirstChapterOverall;
+    if (el.btnNextChapter) el.btnNextChapter.disabled = isLastChapterOverall;
+
+    // Render Verses
     el.versesStream.innerHTML = '';
     const frag = document.createDocumentFragment();
 
@@ -246,7 +252,6 @@
         </div>
       `;
 
-      // Clicking any verse seeks audio and scroll directly to it
       item.addEventListener('click', () => {
         seekToVerse(v.verse, true);
       });
@@ -262,14 +267,17 @@
     }
 
     setupAudio();
+    updateBookPickerHighlight();
     updateChapterPickerHighlight();
+
+    localStorage.setItem('biblescroll_book', state.bookId);
     localStorage.setItem('biblescroll_ch', state.chapter);
 
-    // Recalculate verse offsets after DOM layout
+    // Recalculate geometric offsets for smooth roll interpolation
     setTimeout(cacheVerseOffsets, 150);
   }
 
-  // --- Cache Geometric Offsets for Continuous Interpolation ---
+  // --- Cache Geometric Offsets for Continuous Rolling ---
   function cacheVerseOffsets() {
     if (!el.scrollViewport) return;
     const chData = getCurrentChapterData();
@@ -283,7 +291,7 @@
       const elem = document.getElementById(`verse-${v.verse}`);
       if (elem) {
         const rect = elem.getBoundingClientRect();
-        // Calculate the scrollTop needed so the verse is centered in the reading zone (42% from top)
+        // Target scroll to center the verse in the reading zone (42% from top of viewport)
         const targetScroll = currentScroll + (rect.top - vpRect.top) - (vpRect.height * 0.40);
         state.verseOffsets.push({
           verse: v.verse,
@@ -295,7 +303,7 @@
     });
   }
 
-  // --- The Continuous Smooth Rolling Animation Engine ---
+  // --- Continuous Smooth Rolling Animation Engine ---
   let animFrameId = null;
 
   function startRollLoop() {
@@ -322,10 +330,10 @@
     let targetScroll = 0;
 
     if (state.rollMode === 'steady') {
-      // Steady Tempo Roll: continuous uniform rolling speed for the entire duration (YouTube video style)
+      // Steady Tempo Roll: constant uniform velocity matching YouTube scripture video
       const chData = getCurrentChapterData();
-      const intro = chData.intro_end || 6.5;
-      const outro = dur - 2.0;
+      const intro = chData.intro_end || 4.5;
+      const outro = dur - 1.5;
 
       if (curTime < intro) {
         targetScroll = 0;
@@ -336,7 +344,7 @@
         targetScroll = progress * maxScroll;
       }
     } else {
-      // Audio-Synced Glide: Continuous piecewise interpolation through verse positions
+      // Audio-Synced Glide: Continuous piecewise interpolation through verse offsets
       const offsets = state.verseOffsets;
       if (offsets.length > 0) {
         const first = offsets[0];
@@ -347,7 +355,6 @@
         } else if (curTime >= last.end) {
           targetScroll = maxScroll;
         } else {
-          // Find enclosing interval
           for (let i = 0; i < offsets.length; i++) {
             const curV = offsets[i];
             const nextV = offsets[i + 1];
@@ -365,7 +372,7 @@
       }
     }
 
-    // Apply ultra-smooth exponential damping to glide gracefully without jitter
+    // Apply exponential smoothing
     const curScroll = el.scrollViewport.scrollTop;
     const diff = targetScroll - curScroll;
 
@@ -408,7 +415,6 @@
     }
 
     if (matchedVerse) {
-      // Loop verse feature
       if (state.repeatVerse && curTime >= matchedVerse.end - 0.25) {
         el.audio.currentTime = matchedVerse.start;
         return;
@@ -428,7 +434,6 @@
   function setActiveVerse(verseNum) {
     state.activeVerseNum = verseNum;
 
-    // Remove previous active
     document.querySelectorAll('.scroll-verse-item.is-active').forEach((node) => {
       node.classList.remove('is-active');
     });
@@ -450,7 +455,6 @@
     });
   }
 
-  // --- Seek To Verse ---
   function seekToVerse(verseNum, andPlay = true) {
     const chData = getCurrentChapterData();
     const v = chData.verses.find((item) => item.verse === verseNum);
@@ -459,7 +463,6 @@
     el.audio.currentTime = v.start;
     setActiveVerse(verseNum);
 
-    // Instantly align scroll to verse
     const offset = state.verseOffsets.find((o) => o.verse === verseNum);
     if (offset && el.scrollViewport) {
       el.scrollViewport.scrollTop = offset.targetY;
@@ -505,40 +508,38 @@
     }
   }
 
+  // --- Navigation: Across Chapters and Books ---
   function nextChapter() {
-    if (state.chapter < 13) {
+    const book = getCurrentBook();
+    if (state.chapter < book.total_chapters) {
       state.chapter++;
       renderChapter();
       if (state.isPlaying) playAudio();
-      showToast(`Chapter ${state.chapter} Loaded`);
+      showToast(`${book.name_ta} ${state.chapter}`);
+    } else if (state.bookId < 27) {
+      state.bookId++;
+      state.chapter = 1;
+      const nextBook = getCurrentBook();
+      renderChapter();
+      if (state.isPlaying) playAudio();
+      showToast(`Next Book: ${nextBook.name_ta} 1`);
     }
   }
 
   function prevChapter() {
     if (state.chapter > 1) {
       state.chapter--;
+      const book = getCurrentBook();
       renderChapter();
       if (state.isPlaying) playAudio();
-      showToast(`Chapter ${state.chapter} Loaded`);
-    }
-  }
-
-  function nextVerse() {
-    const chData = getCurrentChapterData();
-    const curIdx = state.activeVerseNum || 1;
-    if (curIdx < chData.total_verses) {
-      seekToVerse(curIdx + 1, true);
-    } else if (state.chapter < 13) {
-      nextChapter();
-    }
-  }
-
-  function prevVerse() {
-    const curIdx = state.activeVerseNum || 1;
-    if (curIdx > 1) {
-      seekToVerse(curIdx - 1, true);
-    } else if (state.chapter > 1) {
-      prevChapter();
+      showToast(`${book.name_ta} ${state.chapter}`);
+    } else if (state.bookId > 1) {
+      state.bookId--;
+      const prevBook = getCurrentBook();
+      state.chapter = prevBook.total_chapters;
+      renderChapter();
+      if (state.isPlaying) playAudio();
+      showToast(`Previous Book: ${prevBook.name_ta} ${state.chapter}`);
     }
   }
 
@@ -615,29 +616,6 @@
     showToast(view === 'scroll' ? 'Cinematic Scroll View' : 'Card Reader View');
   }
 
-  function setAudioTrack(track) {
-    if (state.audioTrack === track) return;
-    state.audioTrack = track;
-    localStorage.setItem('biblescroll_track', track);
-
-    [el.btnTrackTamil, el.btnTrackEnglish].forEach((btn) => {
-      if (btn) btn.classList.remove('is-active');
-    });
-
-    if (track === 'ta' && el.btnTrackTamil) el.btnTrackTamil.classList.add('is-active');
-    if (track === 'en' && el.btnTrackEnglish) el.btnTrackEnglish.classList.add('is-active');
-
-    const curTime = el.audio.currentTime;
-    const wasPlaying = state.isPlaying;
-
-    setupAudio();
-    el.audio.currentTime = curTime;
-    if (wasPlaying) playAudio();
-
-    showToast(track === 'ta' ? 'Audio: Tamil Narration (WordProject)' : 'Audio: English Narration (KJV)');
-  }
-
-  // --- Fullscreen Toggle ---
   function toggleFullscreen() {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().then(() => {
@@ -648,20 +626,81 @@
     }
   }
 
+  // --- Book Picker Modal (Categorized for all 27 Books) ---
+  function buildBookPicker() {
+    if (!el.bookCategoryList) return;
+    el.bookCategoryList.innerHTML = '';
+
+    const categories = [
+      { name_en: "Gospels", name_ta: "சுவிசேஷங்கள்", range: [1, 4] },
+      { name_en: "History", name_ta: "சரித்திரம்", range: [5, 5] },
+      { name_en: "Pauline Epistles", name_ta: "பவுலின் நிருபங்கள்", range: [6, 18] },
+      { name_en: "General Epistles", name_ta: "பொதுவான நிருபங்கள்", range: [19, 26] },
+      { name_en: "Prophecy", name_ta: "தீர்க்கதரிசனம்", range: [27, 27] }
+    ];
+
+    categories.forEach((cat) => {
+      const sec = document.createElement('section');
+      sec.className = 'book-cat-section';
+
+      sec.innerHTML = `
+        <div class="book-cat-header">
+          <span>${cat.name_ta}</span>
+          <span style="font-weight:400; opacity:0.7;">• ${cat.name_en}</span>
+        </div>
+        <div class="book-cat-grid" id="cat-grid-${cat.name_en}"></div>
+      `;
+
+      const grid = sec.querySelector('.book-cat-grid');
+
+      for (let id = cat.range[0]; id <= cat.range[1]; id++) {
+        const b = window.NT_DATA[String(id)];
+        if (!b) continue;
+
+        const tile = document.createElement('div');
+        tile.className = `book-tile ${id === state.bookId ? 'is-active' : ''}`;
+        tile.dataset.bookId = id;
+        tile.innerHTML = `
+          <div class="book-tile-ta">${b.name_ta}</div>
+          <div class="book-tile-en">${b.name_en}</div>
+          <div class="book-tile-meta">${b.total_chapters} Chapters</div>
+        `;
+
+        tile.addEventListener('click', () => {
+          state.bookId = id;
+          state.chapter = 1;
+          renderChapter();
+          closeModal(el.bookModal);
+          if (state.isPlaying) playAudio();
+        });
+
+        grid.appendChild(tile);
+      }
+
+      el.bookCategoryList.appendChild(sec);
+    });
+  }
+
+  function updateBookPickerHighlight() {
+    if (!el.bookCategoryList) return;
+    el.bookCategoryList.querySelectorAll('.book-tile').forEach((tile) => {
+      const id = parseInt(tile.dataset.bookId, 10);
+      tile.classList.toggle('is-active', id === state.bookId);
+    });
+  }
+
   // --- Chapter Picker Modal ---
   function buildChapterPicker() {
     if (!el.chapterGrid) return;
     el.chapterGrid.innerHTML = '';
 
-    for (let c = 1; c <= 13; c++) {
-      const data = window.HEBREWS_DATA[String(c)];
+    const book = getCurrentBook();
+    if (!book) return;
+
+    for (let c = 1; c <= book.total_chapters; c++) {
       const tile = document.createElement('div');
       tile.className = `chapter-tile ${c === state.chapter ? 'is-active' : ''}`;
-      tile.innerHTML = `
-        <div class="chapter-tile-num">${c}</div>
-        <div class="chapter-tile-sub">${data ? data.title_ta.slice(0, 18) + '...' : ''}</div>
-        <div style="font-size:0.7rem; color:var(--text-muted);">${data ? data.total_verses : 0} Verses</div>
-      `;
+      tile.textContent = c;
 
       tile.addEventListener('click', () => {
         state.chapter = c;
@@ -675,13 +714,10 @@
   }
 
   function updateChapterPickerHighlight() {
-    if (!el.chapterGrid) return;
-    el.chapterGrid.querySelectorAll('.chapter-tile').forEach((tile, idx) => {
-      tile.classList.toggle('is-active', idx + 1 === state.chapter);
-    });
+    buildChapterPicker();
   }
 
-  // --- Search Feature ---
+  // --- Search Feature Across Entire New Testament ---
   function setupSearch() {
     if (!el.searchInput || !el.searchResults) return;
 
@@ -694,21 +730,38 @@
   function renderSearchResults(q) {
     if (!el.searchResults) return;
     if (!q || q.length < 2) {
-      el.searchResults.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:1.5rem;">Enter at least 2 characters to search across all 13 chapters of Hebrews...</div>';
+      el.searchResults.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:1.5rem;">Enter at least 2 characters to search across all 260 chapters of the New Testament...</div>';
       return;
     }
 
     const matches = [];
-    for (let c = 1; c <= 13; c++) {
-      const chData = window.HEBREWS_DATA[String(c)];
-      if (!chData) continue;
-      chData.verses.forEach((v) => {
-        const inTa = v.ta.toLowerCase().includes(q);
-        const inEn = v.en.toLowerCase().includes(q);
-        if (inTa || inEn) {
-          matches.push({ chapter: c, verse: v.verse, ta: v.ta, en: v.en });
+    for (let bId = 1; bId <= 27; bId++) {
+      const b = window.NT_DATA[String(bId)];
+      if (!b) continue;
+
+      for (let chId = 1; chId <= b.total_chapters; chId++) {
+        const ch = b.chapters[String(chId)];
+        if (!ch) continue;
+
+        for (const v of ch.verses) {
+          const inTa = v.ta.toLowerCase().includes(q);
+          const inEn = v.en.toLowerCase().includes(q);
+          if (inTa || inEn) {
+            matches.push({
+              bookId: bId,
+              bookTa: b.name_ta,
+              bookEn: b.name_en,
+              chapter: chId,
+              verse: v.verse,
+              ta: v.ta,
+              en: v.en
+            });
+            if (matches.length >= 60) break;
+          }
         }
-      });
+        if (matches.length >= 60) break;
+      }
+      if (matches.length >= 60) break;
     }
 
     if (matches.length === 0) {
@@ -719,14 +772,14 @@
     el.searchResults.innerHTML = '';
     const frag = document.createDocumentFragment();
 
-    matches.slice(0, 50).forEach((m) => {
+    matches.forEach((m) => {
       const item = document.createElement('div');
       item.className = 'search-result-item';
       item.innerHTML = `
         <div class="search-result-meta">
-          <span>Hebrews ${m.chapter}:${m.verse}</span>
+          <span>${m.bookTa} ${m.chapter}:${m.verse}</span>
           <span>•</span>
-          <span>எபிரெயர் ${m.chapter}:${m.verse}</span>
+          <span>${m.bookEn} ${m.chapter}:${m.verse}</span>
         </div>
         <div class="search-result-text">
           <div style="margin-bottom:3px;">${highlightTerm(m.ta, q)}</div>
@@ -735,6 +788,7 @@
       `;
 
       item.addEventListener('click', () => {
+        state.bookId = m.bookId;
         state.chapter = m.chapter;
         renderChapter();
         closeModal(el.searchModal);
@@ -755,7 +809,7 @@
     return text.replace(regex, '<mark style="background:var(--accent-glow); color:inherit; border-radius:2px; padding:0 2px;">$1</mark>');
   }
 
-  // --- Themes & Font Size ---
+  // --- Themes & Appearance ---
   function setTheme(theme) {
     state.theme = theme;
     document.documentElement.setAttribute('data-theme', theme);
@@ -805,13 +859,13 @@
           e.preventDefault();
           el.audio.currentTime = Math.max(el.audio.currentTime - 10, 0);
           break;
-        case 'KeyJ':
+        case 'BracketLeft':
           e.preventDefault();
-          prevVerse();
+          prevChapter();
           break;
-        case 'KeyK':
+        case 'BracketRight':
           e.preventDefault();
-          nextVerse();
+          nextChapter();
           break;
         case 'KeyM':
           e.preventDefault();
@@ -855,12 +909,15 @@
     el.audio.addEventListener('ended', () => {
       if (state.repeatVerse) {
         seekToVerse(state.activeVerseNum || 1, true);
-      } else if (state.chapter < 13) {
-        showToast(`Chapter ${state.chapter} completed. Rolling Chapter ${state.chapter + 1}...`);
-        nextChapter();
       } else {
-        pauseAudio();
-        showToast('You have reached the end of Hebrews!');
+        const book = getCurrentBook();
+        if (state.chapter < book.total_chapters || state.bookId < 27) {
+          showToast(`Chapter completed. Rolling next chapter...`);
+          nextChapter();
+        } else {
+          pauseAudio();
+          showToast('You have completed the entire New Testament!');
+        }
       }
     });
 
@@ -898,10 +955,6 @@
     if (el.btnModeEnglish) el.btnModeEnglish.addEventListener('click', () => setDisplayMode('english'));
     if (el.btnModeParallel) el.btnModeParallel.addEventListener('click', () => setDisplayMode('parallel'));
 
-    // Audio Track Switchers
-    if (el.btnTrackTamil) el.btnTrackTamil.addEventListener('click', () => setAudioTrack('ta'));
-    if (el.btnTrackEnglish) el.btnTrackEnglish.addEventListener('click', () => setAudioTrack('en'));
-
     // Roll Mode
     if (el.btnRollModeToggle) el.btnRollModeToggle.addEventListener('click', toggleRollMode);
     if (el.btnRollStyleSteady) el.btnRollStyleSteady.addEventListener('click', () => setRollMode('steady'));
@@ -910,8 +963,20 @@
     // Fullscreen
     if (el.btnFullscreenToggle) el.btnFullscreenToggle.addEventListener('click', toggleFullscreen);
 
+    // Book Modal
+    if (el.bookSelectBtn) el.bookSelectBtn.addEventListener('click', () => openModal(el.bookModal));
+    if (el.closeBookModalBtn) el.closeBookModalBtn.addEventListener('click', () => closeModal(el.bookModal));
+    if (el.bookModal) {
+      el.bookModal.addEventListener('click', (e) => {
+        if (e.target === el.bookModal) closeModal(el.bookModal);
+      });
+    }
+
     // Chapter Modal
-    if (el.chapterSelectBtn) el.chapterSelectBtn.addEventListener('click', () => openModal(el.chapterModal));
+    if (el.chapterSelectBtn) el.chapterSelectBtn.addEventListener('click', () => {
+      buildChapterPicker();
+      openModal(el.chapterModal);
+    });
     if (el.closeChapterModalBtn) el.closeChapterModalBtn.addEventListener('click', () => closeModal(el.chapterModal));
     if (el.chapterModal) {
       el.chapterModal.addEventListener('click', (e) => {
@@ -921,8 +986,8 @@
 
     // Player Buttons
     if (el.btnPlayPause) el.btnPlayPause.addEventListener('click', togglePlayPause);
-    if (el.btnPrevVerse) el.btnPrevVerse.addEventListener('click', prevVerse);
-    if (el.btnNextVerse) el.btnNextVerse.addEventListener('click', nextVerse);
+    if (el.btnPrevChapter) el.btnPrevChapter.addEventListener('click', prevChapter);
+    if (el.btnNextChapter) el.btnNextChapter.addEventListener('click', nextChapter);
     if (el.btnRewind10) el.btnRewind10.addEventListener('click', () => {
       el.audio.currentTime = Math.max(el.audio.currentTime - 10, 0);
     });
@@ -1014,7 +1079,7 @@
       });
     }
 
-    // Window Resize -> recache offsets
+    // Window Resize
     window.addEventListener('resize', () => {
       setTimeout(cacheVerseOffsets, 150);
     });
@@ -1028,13 +1093,14 @@
     setDisplayMode(state.displayMode);
     setViewMode(state.viewMode);
     updateRollModeUI();
+    buildBookPicker();
     buildChapterPicker();
     renderChapter();
     setupSearch();
     setupKeyboardShortcuts();
     initEventListeners();
     startRollLoop();
-    console.log('Bible Scroll App V2 initialized. Ready for continuous YouTube-style rolling.');
+    console.log('Bible Scroll App (Full New Testament Edition) initialized.');
   }
 
   if (document.readyState === 'loading') {

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bible Scroll App | எபிரெயர் • Hebrews - Tamil Audio Bible & Cinematic Scroll</title>
-  <meta name="description" content="Cinematic rolling scripture scroll and Tamil Audio Bible webapp for the Book of Hebrews. Continuous smooth roll synced to audio narration.">
+  <title>Bible Scroll App | தமிழ் புதிய ஏற்பாடு • Tamil New Testament Audio Bible</title>
+  <meta name="description" content="Cinematic rolling scripture scroll and Tamil Audio Bible webapp for the entire New Testament (27 books, 260 chapters). Smooth roll synced to Tamil audio narration with English reference.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📜</text></svg>">
   
   <!-- Google Fonts for Tamil & English Typography -->
@@ -33,32 +33,42 @@
         </svg>
       </div>
       <div class="brand-title-wrap">
-        <h1 class="brand-title">Bible Scroll • எபிரெயர்</h1>
-        <span class="brand-subtitle">Tamil Audio Bible & Cinematic Scroll</span>
+        <h1 class="brand-title">Bible Scroll • புதிய ஏற்பாடு</h1>
+        <span class="brand-subtitle">Tamil New Testament • 27 Books</span>
       </div>
     </div>
 
-    <!-- Middle / Right Header Controls -->
+    <!-- Navigation Selectors & Tools -->
     <div class="header-actions">
-      <!-- Chapter Quick Picker Button -->
-      <div class="chapter-dropdown-wrap">
-        <button id="chapterSelectBtn" class="chapter-select-btn" title="Choose Chapter (1-13)">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="8" y1="6" x2="21" y2="6"></line>
-            <line x1="8" y1="12" x2="21" y2="12"></line>
-            <line x1="8" y1="18" x2="21" y2="18"></line>
-            <line x1="3" y1="6" x2="3.01" y2="6"></line>
-            <line x1="3" y1="12" x2="3.01" y2="12"></line>
-            <line x1="3" y1="18" x2="3.01" y2="18"></line>
-          </svg>
-          <span id="chapterSelectLabel">Hebrews 1</span>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
-        </button>
-      </div>
+      <!-- Book Selector Dropdown -->
+      <button id="bookSelectBtn" class="nav-select-btn" title="Choose Book from New Testament (27 Books)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
+        <span id="bookSelectLabel">மத்தேயு • Matthew</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
 
-      <!-- Segmented View Mode Control: Cinematic Scroll vs Classic Cards -->
+      <!-- Chapter Selector Dropdown -->
+      <button id="chapterSelectBtn" class="nav-select-btn" title="Choose Chapter">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="8" y1="6" x2="21" y2="6"></line>
+          <line x1="8" y1="12" x2="21" y2="12"></line>
+          <line x1="8" y1="18" x2="21" y2="18"></line>
+          <line x1="3" y1="6" x2="3.01" y2="6"></line>
+          <line x1="3" y1="12" x2="3.01" y2="12"></line>
+          <line x1="3" y1="18" x2="3.01" y2="18"></line>
+        </svg>
+        <span id="chapterSelectLabel">அதிகாரம் 1 (Ch 1)</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+
+      <!-- Segmented View Mode: Scroll vs Cards -->
       <nav class="view-segmented-control" aria-label="View Layout">
         <button id="btnViewScroll" class="view-btn is-active" title="Cinematic Continuous Scroll (Like YouTube Video)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -78,12 +88,12 @@
       <!-- Segmented Language Control -->
       <nav class="mode-segmented-control" aria-label="Reading Language">
         <button id="btnModeTamil" class="mode-btn is-active" title="Tamil Only (1)">தமிழ்</button>
-        <button id="btnModeEnglish" class="mode-btn" title="English KJV (2)">English</button>
+        <button id="btnModeEnglish" class="mode-btn" title="English KJV Reference (2)">English</button>
         <button id="btnModeParallel" class="mode-btn" title="Bilingual Side-by-Side (3)">Parallel</button>
       </nav>
 
       <!-- Action Tools -->
-      <button id="btnSearchOpen" class="icon-btn" title="Search Verses">
+      <button id="btnSearchOpen" class="icon-btn" title="Search New Testament">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -91,7 +101,7 @@
       </button>
 
       <button id="btnFullscreenToggle" class="icon-btn" title="Toggle Fullscreen">
-        <svg id="fullscreenIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
         </svg>
       </button>
@@ -106,20 +116,13 @@
   </header>
 
   <!-- ========================================================================
-       Subheader: Narration Track & Scroll Speed Bar
+       Subheader: Narration Track & Scroll Tempo Bar
        ======================================================================== -->
   <div class="top-meta-banner">
     <div class="meta-banner-content">
       <div class="meta-audio-info">
         <span class="audio-pulse-indicator"></span>
-        <span id="bannerAudioLabel">Tamil Narration (WordProject)</span>
-      </div>
-
-      <div class="meta-center-controls">
-        <div class="audio-track-pills">
-          <button id="btnTrackTamil" class="audio-pill-btn is-active" title="Tamil Audio Narration">தமிழ் Audio</button>
-          <button id="btnTrackEnglish" class="audio-pill-btn" title="English KJV Audio Narration">English Audio</button>
-        </div>
+        <span id="bannerAudioLabel">Tamil Narration • மத்தேயு 1</span>
       </div>
 
       <div class="meta-scroll-controls">
@@ -136,7 +139,7 @@
        ======================================================================== -->
   <main class="scroll-stage-container">
 
-    <!-- Floating "Resume Auto-Roll" pill when user touches/drags the screen -->
+    <!-- Floating "Resume Auto-Roll" banner when user touches/scrolls manually -->
     <div id="resumeRollBanner" class="resume-roll-banner">
       <span>Auto-Roll Paused (Manual Scroll)</span>
       <button id="btnResumeRoll" class="resume-roll-btn">
@@ -147,7 +150,7 @@
       </button>
     </div>
 
-    <!-- Soft Horizontal Focal Reading Horizon Line (can be toggled) -->
+    <!-- Soft Horizontal Focal Reading Horizon Line -->
     <div id="focalReadingGuide" class="focal-reading-guide" aria-hidden="true">
       <span class="focal-guide-label">Reading Focus</span>
     </div>
@@ -164,9 +167,9 @@
         <!-- Chapter Scroll Banner (Scroll Header) -->
         <header class="scroll-chapter-intro">
           <div class="scroll-intro-pill">புதிய ஏற்பாடு • New Testament</div>
-          <h2 id="scrollTitleTa" class="scroll-title-ta">எபிரெயர் 1</h2>
-          <h3 id="scrollSubTa" class="scroll-subtitle-ta">தேவன் குமாரன் மூலமாய்த் திருவுளம்பற்றுதல்</h3>
-          <div id="scrollTitleEn" class="scroll-title-en">Hebrews 1 — God's Supreme Revelation in His Son</div>
+          <h2 id="scrollTitleTa" class="scroll-title-ta">மத்தேயு 1</h2>
+          <h3 id="scrollSubTa" class="scroll-subtitle-ta">சுவிசேஷம்</h3>
+          <div id="scrollTitleEn" class="scroll-title-en">Matthew 1 — The Gospel According to Matthew</div>
           <div class="scroll-intro-divider">
             <svg width="40" height="12" viewBox="0 0 100 20" fill="currentColor">
               <circle cx="50" cy="10" r="5"/>
@@ -178,13 +181,13 @@
 
         <!-- Verses Roll Stream -->
         <div id="versesStream" class="verses-scroll-stream" role="feed">
-          <!-- Dynamically filled by app.js -->
+          <!-- Dynamically populated by app.js -->
         </div>
 
         <!-- Chapter End Marker -->
         <footer class="scroll-chapter-outro">
           <div class="outro-ornament">✦ ✦ ✦</div>
-          <div id="outroText" class="outro-text">எபிரெயர் அதிகாரம் நிறைவுற்றது</div>
+          <div id="outroText" class="outro-text">அதிகாரம் நிறைவுற்றது</div>
           <div class="outro-actions">
             <button id="btnOutroPrev" class="outro-btn">⮜ Previous Chapter</button>
             <button id="btnOutroReplay" class="outro-btn outro-btn-primary">↺ Replay Chapter</button>
@@ -214,13 +217,13 @@
     <div class="player-controls-row">
       <!-- Left: Track Meta -->
       <div class="player-track-info">
-        <div id="playerTrackArt" class="player-track-art">58</div>
+        <div id="playerTrackArt" class="player-track-art">NT</div>
         <div class="player-track-meta">
-          <div id="playerTrackTitle" class="player-track-title">எபிரெயர் 1 - அதிகாரம் 1</div>
+          <div id="playerTrackTitle" class="player-track-title">மத்தேயு 1 - Matthew 1</div>
           <div class="player-track-verse">
             <span id="playerVersePill" class="player-verse-chip">Rolling...</span>
             <span>•</span>
-            <span id="playerCurTime">0:00</span> / <span id="playerTotTime">2:45</span>
+            <span id="playerCurTime">0:00</span> / <span id="playerTotTime">3:58</span>
           </div>
         </div>
       </div>
@@ -235,8 +238,8 @@
             </svg>
           </button>
 
-          <!-- Prev Verse -->
-          <button id="btnPrevVerse" class="ctrl-btn" title="Previous Verse (J)">
+          <!-- Prev Chapter -->
+          <button id="btnPrevChapter" class="ctrl-btn" title="Previous Chapter">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <polygon points="19 20 9 12 19 4 19 20"></polygon>
               <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2"></line>
@@ -268,8 +271,8 @@
             </svg>
           </button>
 
-          <!-- Next Verse -->
-          <button id="btnNextVerse" class="ctrl-btn" title="Next Verse (K)">
+          <!-- Next Chapter -->
+          <button id="btnNextChapter" class="ctrl-btn" title="Next Chapter">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <polygon points="5 4 15 12 5 20 5 4"></polygon>
               <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2"></line>
@@ -308,14 +311,34 @@
   </footer>
 
   <!-- ========================================================================
-       Modals: Chapter Selector, Search, Bookmarks, Settings
+       Modals: Book Selector, Chapter Selector, Search, Settings
        ======================================================================== -->
   
+  <!-- Book Picker Modal (All 27 New Testament Books) -->
+  <div id="bookModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="bookModalTitle">
+    <div class="modal-card" style="max-width: 780px;">
+      <div class="modal-header">
+        <h3 id="bookModalTitle" class="modal-title">Select Book (புதிய ஏற்பாடு • 27 Books)</h3>
+        <button id="closeBookModalBtn" class="icon-btn" title="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="bookCategoryList" class="book-category-container">
+          <!-- Dynamically filled by app.js with categories (Gospels, History, Epistles, Revelation) -->
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Chapter Picker Modal -->
   <div id="chapterModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="chapterModalTitle">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 id="chapterModalTitle" class="modal-title">Select Chapter (எபிரெயர் 1–13)</h3>
+        <h3 id="chapterModalTitle" class="modal-title">Select Chapter (அதிகாரத்தைத் தேர்ந்தெடுங்கள்)</h3>
         <button id="closeChapterModalBtn" class="icon-btn" title="Close">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -335,7 +358,7 @@
   <div id="searchModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="searchModalTitle">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 id="searchModalTitle" class="modal-title">Search Verses (வசனங்களைத் தேடுங்கள்)</h3>
+        <h3 id="searchModalTitle" class="modal-title">Search New Testament (புதிய ஏற்பாட்டில் தேடுங்கள்)</h3>
         <button id="closeSearchModalBtn" class="icon-btn" title="Close">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -349,11 +372,11 @@
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
-          <input type="text" id="searchInput" class="search-field" placeholder="Search Tamil or English (e.g. விசுவாசம், Jesus, faith, பலி)...">
+          <input type="text" id="searchInput" class="search-field" placeholder="Search Tamil or English (e.g. இயேசு, Jesus, விசுவாசம், faith, பலி, அன்பின்)...">
         </div>
         <div id="searchResults" class="search-results-list">
           <div style="color:var(--text-muted); text-align:center; padding:1.5rem;">
-            Type a keyword to search across all 13 chapters of Hebrews...
+            Type a keyword to search across all 260 chapters of the New Testament...
           </div>
         </div>
       </div>
@@ -427,7 +450,7 @@
             <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.6;">
               <div><kbd>Space</kbd> Play / Pause (Starts & stops the roll)</div>
               <div><kbd>←</kbd> / <kbd>→</kbd> Seek -10s / +10s</div>
-              <div><kbd>J</kbd> / <kbd>K</kbd> Previous / Next Verse</div>
+              <div><kbd>[</kbd> / <kbd>]</kbd> Previous / Next Chapter</div>
               <div><kbd>L</kbd> Loop Active Verse</div>
               <div><kbd>M</kbd> Mute / Unmute</div>
               <div><kbd>F</kbd> Fullscreen Toggle</div>
@@ -442,8 +465,9 @@
   <!-- Toast Notice -->
   <div id="toastNotice" class="toast-notice" role="status" aria-live="polite"></div>
 
-  <!-- Scripts -->
-  <script src="js/hebrews_data.js"></script>
+  <!-- Scripts: Manifest, Data, and App Engine -->
+  <script src="js/nt_manifest.js"></script>
+  <script src="js/nt_data.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

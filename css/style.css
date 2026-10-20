@@ -1,5 +1,6 @@
 /* ==========================================================================
-   Bible Scroll App - Version 2 (Cinematic Video Scroll Edition)
+   Bible Scroll App - Full New Testament Edition (27 Books, 260 Chapters)
+   Cinematic Continuous Scrolling Scripture Reader
    ========================================================================== */
 
 :root {
@@ -107,7 +108,7 @@
   --player-border: #dfcaa4;
 }
 
-/* Reset & Base Setup */
+/* Reset & Base */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -116,7 +117,7 @@
 
 html, body {
   height: 100%;
-  overflow: hidden; /* Scroll is handled in the scroll viewport */
+  overflow: hidden;
 }
 
 body {
@@ -128,7 +129,6 @@ body {
   display: flex;
   flex-direction: column;
   -webkit-font-smoothing: antialiased;
-  user-select: text;
 }
 
 /* ==========================================================================
@@ -191,6 +191,34 @@ body {
   gap: 0.5rem;
 }
 
+/* Nav Select Buttons for Book and Chapter */
+.nav-select-btn {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: all var(--transition-fast);
+  max-width: 190px;
+}
+
+.nav-select-btn span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-select-btn:hover {
+  border-color: var(--accent-gold);
+  background-color: var(--bg-elevated);
+}
+
 /* Segmented Buttons */
 .view-segmented-control,
 .mode-segmented-control {
@@ -229,27 +257,6 @@ body {
   background-color: var(--accent-gold);
   color: #ffffff;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-}
-
-/* Chapter Select Button */
-.chapter-select-btn {
-  background-color: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  padding: 6px 14px;
-  border-radius: var(--radius-md);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all var(--transition-fast);
-}
-
-.chapter-select-btn:hover {
-  border-color: var(--accent-gold);
-  background-color: var(--bg-elevated);
 }
 
 .icon-btn {
@@ -314,31 +321,6 @@ body {
   animation: pulse 1.8s infinite alternate;
 }
 
-.audio-track-pills {
-  display: inline-flex;
-  background-color: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-full);
-  padding: 2px;
-}
-
-.audio-pill-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  padding: 2px 10px;
-  border-radius: var(--radius-full);
-  font-size: 0.74rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.audio-pill-btn.is-active {
-  background-color: var(--accent-cyan);
-  color: #ffffff;
-}
-
 .meta-scroll-controls {
   display: flex;
   align-items: center;
@@ -367,7 +349,7 @@ body {
 }
 
 /* ==========================================================================
-   Main Scroll Stage (Cinematic Scripture Roll Engine)
+   Main Scroll Stage
    ========================================================================== */
 .scroll-stage-container {
   flex: 1;
@@ -378,7 +360,7 @@ body {
   background-color: var(--bg-primary);
 }
 
-/* Soft Reading Focal Guide Line (Can be toggled) */
+/* Focal Reading Guide */
 .focal-reading-guide {
   position: absolute;
   top: 42%;
@@ -455,11 +437,10 @@ body.show-focal-guide .focal-reading-guide {
   position: relative;
   overflow-y: auto;
   overflow-x: hidden;
-  scroll-behavior: auto; /* Handled smoothly in JS requestAnimationFrame */
+  scroll-behavior: auto;
   -webkit-overflow-scrolling: touch;
 }
 
-/* Custom Scrollbar for Viewport */
 .scroll-viewport::-webkit-scrollbar {
   width: 6px;
 }
@@ -471,7 +452,7 @@ body.show-focal-guide .focal-reading-guide {
   border-radius: 4px;
 }
 
-/* Top and Bottom Gradient Fade Masks (Video Reel Effect) */
+/* Top and Bottom Gradient Fade Masks */
 .viewport-mask-top,
 .viewport-mask-bottom {
   position: sticky;
@@ -535,7 +516,7 @@ body.show-focal-guide .focal-reading-guide {
 }
 
 .scroll-subtitle-ta {
-  font-size: 1.45rem;
+  font-size: 1.4rem;
   font-weight: 600;
   color: var(--accent-gold);
   line-height: 1.4;
@@ -561,10 +542,9 @@ body.show-focal-guide .focal-reading-guide {
 .verses-scroll-stream {
   display: flex;
   flex-direction: column;
-  gap: 2.2rem; /* Comfortable video reading gap */
+  gap: 2.2rem;
 }
 
-/* Continuous Scroll Item (Without Box / Without Pinpointing) */
 .scroll-verse-item {
   position: relative;
   padding: 0.75rem 1rem;
@@ -579,7 +559,6 @@ body.show-focal-guide .focal-reading-guide {
   background-color: rgba(255, 255, 255, 0.03);
 }
 
-/* Active Verse Glow - Gentle, cinematic focus without rigid box boundaries */
 .scroll-verse-item.is-active {
   opacity: 1;
   background: radial-gradient(ellipse at center, var(--active-verse-glow) 0%, transparent 80%);
@@ -604,7 +583,6 @@ body.show-focal-guide .focal-reading-guide {
   gap: 1rem;
 }
 
-/* Verse Number */
 .verse-num-roll {
   display: inline-flex;
   align-items: center;
@@ -631,7 +609,6 @@ body.show-focal-guide .focal-reading-guide {
   gap: 0.6rem;
 }
 
-/* Tamil Typography */
 .verse-ta {
   font-size: var(--font-size-base);
   line-height: var(--line-height-base);
@@ -641,7 +618,6 @@ body.show-focal-guide .focal-reading-guide {
   transition: all 0.2s ease;
 }
 
-/* English Typography */
 .verse-en {
   font-size: calc(var(--font-size-base) * 0.86);
   line-height: 1.8;
@@ -690,7 +666,7 @@ body[data-mode="parallel"] .verse-ta {
   }
 }
 
-/* Chapter Outro in Scroll */
+/* Chapter Outro */
 .scroll-chapter-outro {
   text-align: center;
   padding: 4rem 1rem 3rem 1rem;
@@ -745,9 +721,7 @@ body[data-mode="parallel"] .verse-ta {
   box-shadow: 0 2px 8px var(--accent-glow);
 }
 
-/* ==========================================================================
-   Alternative View: Classic Cards Mode
-   ========================================================================== */
+/* Alternative View: Cards Mode */
 body[data-view="cards"] .verses-scroll-stream {
   gap: 0.85rem;
 }
@@ -783,7 +757,6 @@ body[data-view="cards"] .scroll-verse-item.is-active {
   flex-direction: column;
 }
 
-/* Progress Scrubber */
 .player-progress-wrap {
   width: 100%;
   position: relative;
@@ -836,7 +809,6 @@ body[data-view="cards"] .scroll-verse-item.is-active {
   transform: translateY(-50%) scale(1);
 }
 
-/* Controls Row */
 .player-controls-row {
   display: grid;
   grid-template-columns: 280px 1fr 280px;
@@ -846,7 +818,6 @@ body[data-view="cards"] .scroll-verse-item.is-active {
   height: calc(var(--player-height) - 6px);
 }
 
-/* Left: Track Meta */
 .player-track-info {
   display: flex;
   align-items: center;
@@ -897,7 +868,6 @@ body[data-view="cards"] .scroll-verse-item.is-active {
   font-weight: 600;
 }
 
-/* Center: Playback Buttons */
 .player-center-controls {
   display: flex;
   flex-direction: column;
@@ -950,7 +920,6 @@ body[data-view="cards"] .scroll-verse-item.is-active {
   color: var(--accent-gold);
 }
 
-/* Right: Tools */
 .player-right-tools {
   display: flex;
   align-items: center;
@@ -990,8 +959,116 @@ body[data-view="cards"] .scroll-verse-item.is-active {
 }
 
 /* ==========================================================================
-   Modals & Panels
+   Book Selector Categorized Grid
    ========================================================================== */
+.book-category-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.book-cat-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.book-cat-header {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 4px;
+}
+
+.book-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+  gap: 0.65rem;
+}
+
+.book-tile {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 0.85rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.book-tile:hover {
+  border-color: var(--accent-gold);
+  background-color: var(--bg-elevated);
+  transform: translateY(-2px);
+}
+
+.book-tile.is-active {
+  background: linear-gradient(135deg, var(--accent-light), rgba(245, 158, 11, 0.2));
+  border-color: var(--accent-gold);
+}
+
+.book-tile-ta {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.book-tile-en {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-family: var(--font-en);
+}
+
+.book-tile-meta {
+  font-size: 0.72rem;
+  color: var(--accent-gold);
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+/* Chapter Modal Grid */
+.chapter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
+  gap: 0.6rem;
+}
+
+.chapter-tile {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-family: var(--font-en);
+}
+
+.chapter-tile:hover {
+  border-color: var(--accent-gold);
+  background-color: var(--bg-elevated);
+}
+
+.chapter-tile.is-active {
+  background: linear-gradient(135deg, var(--accent-gold), var(--accent-amber));
+  color: #ffffff;
+  border-color: var(--accent-gold);
+}
+
+/* Modal Shells */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -1050,49 +1127,7 @@ body[data-view="cards"] .scroll-verse-item.is-active {
   overflow-y: auto;
 }
 
-.chapter-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 0.75rem;
-}
-
-.chapter-tile {
-  background-color: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 0.85rem 0.75rem;
-  text-align: center;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.chapter-tile:hover {
-  border-color: var(--accent-gold);
-  background-color: var(--bg-elevated);
-  transform: translateY(-2px);
-}
-
-.chapter-tile.is-active {
-  background: linear-gradient(135deg, var(--accent-light), rgba(245, 158, 11, 0.2));
-  border-color: var(--accent-gold);
-  color: var(--accent-gold);
-  font-weight: 700;
-}
-
-.chapter-tile-num {
-  font-size: 1.25rem;
-  font-weight: 800;
-}
-
-.chapter-tile-sub {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-}
-
-/* Search Modal */
+/* Search */
 .search-input-wrap {
   position: relative;
   margin-bottom: 1.25rem;
@@ -1357,11 +1392,17 @@ input:checked + .slider:before {
   }
 
   .brand-title {
-    font-size: 0.95rem;
+    font-size: 0.92rem;
   }
 
   .brand-subtitle {
     display: none;
+  }
+
+  .nav-select-btn {
+    padding: 4px 8px;
+    font-size: 0.74rem;
+    max-width: 120px;
   }
 
   .view-btn,
