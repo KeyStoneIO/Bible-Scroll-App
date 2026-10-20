@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>எபிரெயர் | Hebrews - Tamil Audio Bible & Synced Audiobook</title>
-  <meta name="description" content="Interactive Tamil Audio Bible for the Book of Hebrews with synchronized verse highlighting, dual-language parallel mode, and audio player.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📖</text></svg>">
+  <title>Bible Scroll App | எபிரெயர் • Hebrews - Tamil Audio Bible & Cinematic Scroll</title>
+  <meta name="description" content="Cinematic rolling scripture scroll and Tamil Audio Bible webapp for the Book of Hebrews. Continuous smooth roll synced to audio narration.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📜</text></svg>">
   
   <!-- Google Fonts for Tamil & English Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Mukta+Malar:wght@400;500;600;700;800&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Mukta+Malar:wght@400;500;600;700;800&family=Noto+Sans+Tamil:wght@400;500;600;700&family=Cinzel:wght@600;700;800&display=swap" rel="stylesheet">
   
   <!-- Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body data-mode="tamil">
+<body data-mode="tamil" data-view="scroll">
 
   <!-- ========================================================================
        Top Navigation & App Bar
@@ -24,15 +24,17 @@
     <div class="brand-section">
       <div class="brand-icon" aria-hidden="true">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-          <path d="M8 7h8"/>
-          <path d="M8 11h6"/>
+          <path d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2z"/>
+          <path d="M12 2v20"/>
+          <path d="M7 8h2"/>
+          <path d="M7 12h2"/>
+          <path d="M15 8h2"/>
+          <path d="M15 12h2"/>
         </svg>
       </div>
       <div class="brand-title-wrap">
-        <h1 class="brand-title">எபிரெயர் • Hebrews</h1>
-        <span class="brand-subtitle">Tamil Audio Bible & Synced Reader</span>
+        <h1 class="brand-title">Bible Scroll • எபிரெயர்</h1>
+        <span class="brand-subtitle">Tamil Audio Bible & Cinematic Scroll</span>
       </div>
     </div>
 
@@ -56,11 +58,28 @@
         </button>
       </div>
 
-      <!-- Segmented Mode Control -->
-      <nav class="mode-segmented-control" aria-label="Reading Mode">
-        <button id="btnModeTamil" class="mode-btn is-active" title="Tamil Only Mode (1)">தமிழ்</button>
-        <button id="btnModeEnglish" class="mode-btn" title="English KJV Mode (2)">English</button>
-        <button id="btnModeParallel" class="mode-btn" title="Bilingual Side-by-Side Mode (3)">Parallel</button>
+      <!-- Segmented View Mode Control: Cinematic Scroll vs Classic Cards -->
+      <nav class="view-segmented-control" aria-label="View Layout">
+        <button id="btnViewScroll" class="view-btn is-active" title="Cinematic Continuous Scroll (Like YouTube Video)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/>
+          </svg>
+          Scroll Roll
+        </button>
+        <button id="btnViewCards" class="view-btn" title="Classic Verse Cards">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="7" rx="2"></rect>
+            <rect x="3" y="14" width="18" height="7" rx="2"></rect>
+          </svg>
+          Cards
+        </button>
+      </nav>
+
+      <!-- Segmented Language Control -->
+      <nav class="mode-segmented-control" aria-label="Reading Language">
+        <button id="btnModeTamil" class="mode-btn is-active" title="Tamil Only (1)">தமிழ்</button>
+        <button id="btnModeEnglish" class="mode-btn" title="English KJV (2)">English</button>
+        <button id="btnModeParallel" class="mode-btn" title="Bilingual Side-by-Side (3)">Parallel</button>
       </nav>
 
       <!-- Action Tools -->
@@ -71,13 +90,13 @@
         </svg>
       </button>
 
-      <button id="btnBookmarksOpen" class="icon-btn" title="Saved Bookmarks">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+      <button id="btnFullscreenToggle" class="icon-btn" title="Toggle Fullscreen">
+        <svg id="fullscreenIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
         </svg>
       </button>
 
-      <button id="btnSettingsOpen" class="icon-btn" title="Settings & Appearance">
+      <button id="btnSettingsOpen" class="icon-btn" title="Settings & Rolling Speed">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="3"></circle>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -87,90 +106,96 @@
   </header>
 
   <!-- ========================================================================
-       Main Content / Scripture Reader
+       Subheader: Narration Track & Scroll Speed Bar
        ======================================================================== -->
-  <main class="reader-container">
-    <!-- Chapter Banner Hero -->
-    <section class="chapter-hero">
-      <div class="chapter-badge-wrap">
-        <span id="heroChapterBadge" class="chapter-badge">Hebrews 1</span>
-        <div class="audio-source-pill" title="WordProject Audio Stream">
-          <span id="audioSourceDot" class="audio-source-dot"></span>
-          <span id="audioSourceText">Tamil Audio (WordProject)</span>
-        </div>
+  <div class="top-meta-banner">
+    <div class="meta-banner-content">
+      <div class="meta-audio-info">
+        <span class="audio-pulse-indicator"></span>
+        <span id="bannerAudioLabel">Tamil Narration (WordProject)</span>
       </div>
 
-      <h2 id="heroTitleTa" class="chapter-title-ta">தேவன் குமாரன் மூலமாய்த் திருவுளம்பற்றுதல்</h2>
-      <div id="heroTitleEn" class="chapter-title-en">God's Supreme Revelation in His Son</div>
-
-      <div class="chapter-meta-bar">
-        <div class="chapter-stats">
-          <div class="chapter-stat-item">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <polyline points="10 9 9 9 8 9"></polyline>
-            </svg>
-            <span id="heroVerseCount">14 Verses</span>
-          </div>
-
-          <div class="chapter-stat-item">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            <span id="heroDuration">3 min (2:45)</span>
-          </div>
-        </div>
-
-        <div class="hero-actions">
-          <button id="heroPrevBtn" class="btn-outline" title="Previous Chapter">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-            Prev
-          </button>
-          <button id="heroPlayBtn" class="btn-primary" title="Play Chapter from Start">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M8 5v14l11-7z"/>
-            </svg>
-            Play Chapter
-          </button>
-          <button id="heroNextBtn" class="btn-outline" title="Next Chapter">
-            Next
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Narration Audio Switcher & Mode Helper -->
-    <div id="audioTrackBanner" class="mode-explanation-banner">
-      <div class="mode-explanation-text">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="12" y1="16" x2="12" y2="12"></line>
-          <line x1="12" y1="8" x2="12.01" y2="8"></line>
-        </svg>
-        <span>Displaying Tamil Scriptures with synchronized audio reading.</span>
-      </div>
-
-      <div class="audio-track-selector">
-        <span class="audio-track-label">Narrator Audio:</span>
+      <div class="meta-center-controls">
         <div class="audio-track-pills">
-          <button id="btnTrackTamil" class="audio-pill-btn is-active" title="Listen in Tamil Audio">தமிழ் Audio</button>
-          <button id="btnTrackEnglish" class="audio-pill-btn" title="Listen in English KJV Audio">English Audio</button>
+          <button id="btnTrackTamil" class="audio-pill-btn is-active" title="Tamil Audio Narration">தமிழ் Audio</button>
+          <button id="btnTrackEnglish" class="audio-pill-btn" title="English KJV Audio Narration">English Audio</button>
         </div>
+      </div>
+
+      <div class="meta-scroll-controls">
+        <span class="meta-label">Roll Mode:</span>
+        <button id="btnRollModeToggle" class="pill-badge-btn" title="Toggle between Constant Tempo Roll and Synced Glide">
+          <span id="rollModeLabel">Steady Tempo Roll</span>
+        </button>
       </div>
     </div>
+  </div>
 
-    <!-- Stream of Verses (Karaoke Synchronized) -->
-    <div id="versesStream" class="verses-stream" role="region" aria-label="Bible Verses">
-      <!-- Dynamically filled by app.js -->
+  <!-- ========================================================================
+       Main Content / Scripture Scroll Stage
+       ======================================================================== -->
+  <main class="scroll-stage-container">
+
+    <!-- Floating "Resume Auto-Roll" pill when user touches/drags the screen -->
+    <div id="resumeRollBanner" class="resume-roll-banner">
+      <span>Auto-Roll Paused (Manual Scroll)</span>
+      <button id="btnResumeRoll" class="resume-roll-btn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M8 5v14l11-7z"/>
+        </svg>
+        Resume Roll
+      </button>
+    </div>
+
+    <!-- Soft Horizontal Focal Reading Horizon Line (can be toggled) -->
+    <div id="focalReadingGuide" class="focal-reading-guide" aria-hidden="true">
+      <span class="focal-guide-label">Reading Focus</span>
+    </div>
+
+    <!-- The Scroll Viewport (Cinematic Teleprompter / Video Scroll) -->
+    <div id="scrollViewport" class="scroll-viewport" role="region" aria-label="Cinematic Scripture Scroll">
+      
+      <!-- Top Vignette Fade Mask -->
+      <div class="viewport-mask-top" aria-hidden="true"></div>
+
+      <!-- The Scrolling Canvas that glides smoothly -->
+      <div id="scrollCanvas" class="scroll-canvas">
+        
+        <!-- Chapter Scroll Banner (Scroll Header) -->
+        <header class="scroll-chapter-intro">
+          <div class="scroll-intro-pill">புதிய ஏற்பாடு • New Testament</div>
+          <h2 id="scrollTitleTa" class="scroll-title-ta">எபிரெயர் 1</h2>
+          <h3 id="scrollSubTa" class="scroll-subtitle-ta">தேவன் குமாரன் மூலமாய்த் திருவுளம்பற்றுதல்</h3>
+          <div id="scrollTitleEn" class="scroll-title-en">Hebrews 1 — God's Supreme Revelation in His Son</div>
+          <div class="scroll-intro-divider">
+            <svg width="40" height="12" viewBox="0 0 100 20" fill="currentColor">
+              <circle cx="50" cy="10" r="5"/>
+              <line x1="10" y1="10" x2="35" y2="10" stroke="currentColor" stroke-width="2"/>
+              <line x1="65" y1="10" x2="90" y2="10" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+        </header>
+
+        <!-- Verses Roll Stream -->
+        <div id="versesStream" class="verses-scroll-stream" role="feed">
+          <!-- Dynamically filled by app.js -->
+        </div>
+
+        <!-- Chapter End Marker -->
+        <footer class="scroll-chapter-outro">
+          <div class="outro-ornament">✦ ✦ ✦</div>
+          <div id="outroText" class="outro-text">எபிரெயர் அதிகாரம் நிறைவுற்றது</div>
+          <div class="outro-actions">
+            <button id="btnOutroPrev" class="outro-btn">⮜ Previous Chapter</button>
+            <button id="btnOutroReplay" class="outro-btn outro-btn-primary">↺ Replay Chapter</button>
+            <button id="btnOutroNext" class="outro-btn">Next Chapter ⮞</button>
+          </div>
+        </footer>
+
+      </div>
+
+      <!-- Bottom Vignette Fade Mask -->
+      <div class="viewport-mask-bottom" aria-hidden="true"></div>
     </div>
   </main>
 
@@ -178,8 +203,8 @@
        Sticky Bottom Audiobook Player Bar
        ======================================================================== -->
   <footer class="player-bar-container" role="region" aria-label="Audiobook Player">
-    <!-- Progress Bar Scrubber -->
-    <div id="playerProgressWrap" class="player-progress-wrap" title="Seek Audio">
+    <!-- Progress Bar Scrubber with Smooth Roll Scrubbing -->
+    <div id="playerProgressWrap" class="player-progress-wrap" title="Drag to Seek Audio and Scroll Position">
       <div id="playerBufferedBar" class="player-progress-buffered"></div>
       <div id="playerProgressBar" class="player-progress-current">
         <span class="player-progress-handle"></span>
@@ -193,7 +218,7 @@
         <div class="player-track-meta">
           <div id="playerTrackTitle" class="player-track-title">எபிரெயர் 1 - அதிகாரம் 1</div>
           <div class="player-track-verse">
-            <span id="playerVersePill" class="player-verse-chip">Verse 1</span>
+            <span id="playerVersePill" class="player-verse-chip">Rolling...</span>
             <span>•</span>
             <span id="playerCurTime">0:00</span> / <span id="playerTotTime">2:45</span>
           </div>
@@ -203,13 +228,10 @@
       <!-- Center: Playback Buttons -->
       <div class="player-center-controls">
         <div class="player-buttons-group">
-          <!-- Repeat Verse Toggle -->
-          <button id="btnRepeatVerse" class="ctrl-btn" title="Loop Current Verse (L)">
+          <!-- Roll Toggle Button -->
+          <button id="btnScrollToggle" class="ctrl-btn is-active" title="Toggle Auto-Rolling">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17 1l4 4-4 4"/>
-              <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
-              <path d="M7 23l-4-4 4-4"/>
-              <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+              <path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/>
             </svg>
           </button>
 
@@ -230,9 +252,9 @@
             </svg>
           </button>
 
-          <!-- Play / Pause -->
+          <!-- Play / Pause (Large Central Button) -->
           <button id="btnPlayPause" class="ctrl-btn play-pause-main" title="Play / Pause (Space)">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8 5v14l11-7z"/>
             </svg>
           </button>
@@ -254,11 +276,13 @@
             </svg>
           </button>
 
-          <!-- Auto-scroll Toggle -->
-          <button id="btnAutoScroll" class="ctrl-btn is-active" title="Toggle Auto-Scroll">
+          <!-- Repeat / Loop Verse Toggle -->
+          <button id="btnRepeatVerse" class="ctrl-btn" title="Loop Current Verse (L)">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="7 13 12 18 17 13"></polyline>
-              <polyline points="7 6 12 11 17 6"></polyline>
+              <path d="M17 1l4 4-4 4"/>
+              <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+              <path d="M7 23l-4-4 4-4"/>
+              <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
             </svg>
           </button>
         </div>
@@ -291,7 +315,7 @@
   <div id="chapterModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="chapterModalTitle">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 id="chapterModalTitle" class="modal-title">Select Chapter (எபிரெயர் 1-13)</h3>
+        <h3 id="chapterModalTitle" class="modal-title">Select Chapter (எபிரெயர் 1–13)</h3>
         <button id="closeChapterModalBtn" class="icon-btn" title="Close">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -336,31 +360,11 @@
     </div>
   </div>
 
-  <!-- Bookmarks Modal -->
-  <div id="bookmarksModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="bookmarksModalTitle">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3 id="bookmarksModalTitle" class="modal-title">Bookmarked Verses (சேமிக்கப்பட்ட வசனங்கள்)</h3>
-        <button id="closeBookmarksModalBtn" class="icon-btn" title="Close">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div id="bookmarksList" class="search-results-list">
-          <!-- Dynamically populated -->
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Settings Modal -->
+  <!-- Settings & Scroll Tuning Modal -->
   <div id="settingsModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
-    <div class="modal-card" style="max-width: 480px;">
+    <div class="modal-card" style="max-width: 500px;">
       <div class="modal-header">
-        <h3 id="settingsModalTitle" class="modal-title">Reader Settings</h3>
+        <h3 id="settingsModalTitle" class="modal-title">Scroll & Reader Settings</h3>
         <button id="closeSettingsModalBtn" class="icon-btn" title="Close">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -370,13 +374,28 @@
       </div>
       <div class="modal-body">
         <div class="settings-section">
+          <!-- Roll Motion Mode -->
+          <div class="settings-group">
+            <span class="settings-group-label">Rolling Tempo Style / உருளும் வேகம்</span>
+            <div class="roll-style-grid">
+              <button id="btnRollStyleSteady" class="theme-opt-btn is-active">
+                <strong>Steady Tempo Roll</strong>
+                <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:2px;">Uniform smooth speed for entire audio (Like YouTube video)</div>
+              </button>
+              <button id="btnRollStyleGlide" class="theme-opt-btn">
+                <strong>Audio-Synced Glide</strong>
+                <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:2px;">Continuous glide matching narrator's verse rhythm</div>
+              </button>
+            </div>
+          </div>
+
           <!-- Color Themes -->
           <div class="settings-group">
-            <span class="settings-group-label">Theme / தோற்றம்</span>
+            <span class="settings-group-label">Color Theme / தோற்றம்</span>
             <div class="theme-options-grid">
-              <button id="btnThemeDark" class="theme-opt-btn is-active">🌙 Dark</button>
+              <button id="btnThemeDark" class="theme-opt-btn is-active">🌙 Midnight</button>
               <button id="btnThemeLight" class="theme-opt-btn">☀️ Light</button>
-              <button id="btnThemeSepia" class="theme-opt-btn">📜 Sepia</button>
+              <button id="btnThemeSepia" class="theme-opt-btn">📜 Parchment</button>
             </div>
           </div>
 
@@ -385,19 +404,19 @@
             <span class="settings-group-label">Font Size / எழுத்து அளவு</span>
             <div class="font-size-stepper">
               <button id="btnFontDec" class="stepper-btn" title="Decrease font size">A-</button>
-              <span id="fontSizeValue" style="min-width: 45px; text-align: center; font-weight: 700;">18px</span>
+              <span id="fontSizeValue" style="min-width: 45px; text-align: center; font-weight: 700;">22px</span>
               <button id="btnFontInc" class="stepper-btn" title="Increase font size">A+</button>
             </div>
           </div>
 
-          <!-- Auto-scroll switch -->
+          <!-- Focal Reading Guide Line -->
           <div class="toggle-switch-row">
             <div class="toggle-label-wrap">
-              <span class="toggle-title">Auto-scroll to Active Verse</span>
-              <span class="toggle-subtitle">Keep reading position in view as audio plays</span>
+              <span class="toggle-title">Center Reading Focus Guide</span>
+              <span class="toggle-subtitle">Show subtle horizon line across center viewport</span>
             </div>
             <label class="switch">
-              <input type="checkbox" id="toggleAutoScrollSwitch" checked>
+              <input type="checkbox" id="toggleFocalGuideSwitch">
               <span class="slider"></span>
             </label>
           </div>
@@ -406,11 +425,12 @@
           <div class="settings-group" style="margin-top: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
             <span class="settings-group-label">Keyboard Shortcuts</span>
             <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.6;">
-              <div><kbd>Space</kbd> Play / Pause</div>
+              <div><kbd>Space</kbd> Play / Pause (Starts & stops the roll)</div>
               <div><kbd>←</kbd> / <kbd>→</kbd> Seek -10s / +10s</div>
               <div><kbd>J</kbd> / <kbd>K</kbd> Previous / Next Verse</div>
               <div><kbd>L</kbd> Loop Active Verse</div>
               <div><kbd>M</kbd> Mute / Unmute</div>
+              <div><kbd>F</kbd> Fullscreen Toggle</div>
               <div><kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd> Tamil / English / Parallel Mode</div>
             </div>
           </div>

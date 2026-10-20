@@ -1,26 +1,36 @@
-# எபிரெயர் | Hebrews — Tamil Audio Bible & Synced Audiobook WebApp
+# Bible Scroll App (Version 2 — Cinematic Video Scroll Edition)
 
-> **A modern, responsive, synchronized Tamil Audio Bible reader for the entire Book of Hebrews (எபிரெயர் 1–13), ready for one-click hosting on GitHub Pages.**
+> **A YouTube-style rolling scripture teleprompter & Tamil Audio Bible web application for the Book of Hebrews (எபிரெயர் 1–13), featuring continuous smooth rolling without pinpointing lag.**
+
+Inspired by [Neethiyin Raja Tamil Audio Bible](https://www.youtube.com/watch?v=cIYwOF-rguY&list=PLCBPaXCvdmRbyartDrm5lnGWsza4hgXh-&index=1).
 
 ---
 
-## 🌟 Highlights
+## 🌟 What's New in Version 2
 
-- 🎙️ **Full Audio & Text for Hebrews 1–13**: Complete Scripture text in Tamil (பரிசுத்த வேதாகமம்) and English (King James Version), paired with high-quality Tamil audio recordings from [WordProject](https://www.wordproject.org/bibles/audio/30_tamil/b58.htm).
-- ⚡ **Precision Verse Synchronization**: Verse-by-verse timestamps calibrated with audio silence detection and speech alignment. Each verse highlights in real time with an active waveform pulse as the narrator reads it.
-- 🔀 **Flexible Dual-Language Modes**:
-  - **தமிழ் Mode**: Pure Tamil reading experience with authentic Tamil typography.
-  - **English Mode**: Read the English KJV text while listening to the Tamil audio narration (or toggle to English audio).
-  - **Parallel Mode**: Side-by-side bilingual view (Tamil on the left, English on the right) for in-depth comparative study and language learning.
-- 🎧 **Dual Audio Narration**:
-  - **Tamil Audio Narration**: WordProject official Tamil recording.
-  - **English Audio Narration**: WordProject English KJV recording.
-  - Switch freely between Tamil audio and English audio in any display mode!
-- 🎯 **Interactive Click-to-Seek**: Tap or click any verse in the stream to jump the audio directly to that verse.
-- 🔁 **Verse Looper**: Repeat a single verse continuously — perfect for meditation and scripture memorization.
-- 🔍 **Global Instant Search**: Search for keywords in both Tamil and English across all 303 verses of Hebrews with highlighted results.
-- 🔖 **Bookmarks & Copy**: Save favorite verses to your personal bookmarks drawer (persisted in `localStorage`) and copy verses with a single tap.
-- 🎨 **Reading Customization**: Dark (OLED / Midnight Slate), Light, and Sepia themes, along with font size adjustments and smooth auto-scroll.
+### 1. 📜 Continuous Smooth Roll (YouTube Video Style)
+- **Eliminated Rigid Pinpointing & Lag**: Instead of discrete, jumpy verse highlighting, verses roll continuously and gracefully upward across the screen at a steady, relaxing tempo.
+- **Two Rolling Modes**:
+  - **Steady Tempo Roll (Default)**: A uniform, constant rolling speed spanning the entire duration of the audio, just like a video reel or teleprompter.
+  - **Audio-Synced Glide**: Continuous piecewise interpolation through verse positions matching the narrator's natural rhythm with zero lag or stutter.
+- **Vignette Fade Masks**: Cinematic top and bottom gradient masks so scriptures smoothly fade in from the bottom and fade out at the top.
+- **Optional Reading Horizon**: A subtle central reading focus line that can be toggled on/off in Settings.
+
+### 2. 🔀 Flexible View & Language Modes
+- **View Toggle**: Switch between **📜 Scroll Roll** (video teleprompter style) and **📖 Cards View** (classic study reader).
+- **Language Modes**:
+  - **தமிழ் Mode**: Pure Tamil Scriptures in large, readable font ([Mukta Malar](https://fonts.google.com/specimen/Mukta+Malar)).
+  - **English Mode**: English KJV Scriptures.
+  - **Parallel Mode**: Side-by-side bilingual roll (Tamil & English rolling together in sync).
+- **Dual Audio Narration**:
+  - **WordProject Tamil Narration** (Primary, with bundled offline MP3s + CDN fallback).
+  - **WordProject English KJV Narration**.
+  - Read in English while listening to Tamil audio (or vice-versa)!
+
+### 3. 🎯 Seamless Interaction
+- **Instant Seek on Scrub**: Dragging or clicking the player progress bar smoothly glides the scroll position instantly to match the audio time.
+- **Manual Scroll Override**: Touch or mouse-wheel scrolling gracefully pauses auto-rolling and displays a floating **"▶ Resume Roll"** button.
+- **Fullscreen Mode (⛶)**: Immersive distraction-free reading, ideal for monitors, TVs, and tablets.
 
 ---
 
@@ -28,58 +38,33 @@
 
 ```
 tamil-hebrews-audiobook/
-├── index.html                 # Main single-page application
+├── index.html                 # Version 2 single-page application
 ├── css/
-│   └── style.css              # Custom styling, themes, and responsive layout
+│   └── style.css              # Cinematic scroll stage, vignette masks, responsive themes
 ├── js/
-│   ├── hebrews_data.js        # Chapters 1-13 text (Tamil & English) + exact verse timestamps
-│   └── app.js                 # Complete audio engine, syncing, search, and UI state
+│   ├── hebrews_data.js        # Complete 13 chapters (Tamil & English) + exact verse timestamps
+│   └── app.js                 # 60fps continuous rolling animation engine & audio sync
 ├── audio/                     # Local MP3 recordings for Hebrews 1–13 (offline capable)
 │   ├── ta_58_1.mp3
 │   ├── ta_58_2.mp3
 │   └── ... ta_58_13.mp3
-└── README.md                  # Documentation & GitHub Pages deployment guide
+└── README.md                  # Complete documentation
 ```
 
 ---
 
-## 🚀 How to Host on GitHub Pages (Step-by-Step)
+## 🚀 How to Commit and Push to GitHub
 
-This application is 100% static HTML/CSS/JavaScript. It requires **no server, build tools, or database**.
+To push this Version 2 into your repository [`https://github.com/Saranmurthy/Bible-Scroll-App`](https://github.com/Saranmurthy/Bible-Scroll-App):
 
-### Step 1: Initialize Git and Commit
-Open a terminal in the project directory:
+Open **PowerShell** or **Command Prompt** on your computer and run:
 
-```bash
+```powershell
 cd "C:\Users\saran\.gemini\antigravity\scratch\tamil-hebrews-audiobook"
-git init
 git add .
-git commit -m "Initial commit: Tamil Hebrews Synced Audiobook WebApp"
+git commit -m "Version 2: Cinematic continuous roll synced to Tamil audio without pinpoint lag"
+git push -u origin main --force
 ```
-
-### Step 2: Push to GitHub
-Create a new public repository on GitHub named `tamil-hebrews-audiobook` (or any name you prefer), then link and push:
-
-```bash
-git branch -M main
-git remote add origin https://github.com/<YOUR_GITHUB_USERNAME>/tamil-hebrews-audiobook.git
-git push -u origin main
-```
-
-### Step 3: Enable GitHub Pages
-1. Open your repository on GitHub.
-2. Go to **Settings** > **Pages** (under "Code and automation" in the left sidebar).
-3. Under **Build and deployment**:
-   - **Source**: Select `Deploy from a branch`.
-   - **Branch**: Select `main` and folder `/ (root)`.
-4. Click **Save**.
-5. After 1–2 minutes, your live webapp will be available at:
-   ```
-   https://<YOUR_GITHUB_USERNAME>.github.io/tamil-hebrews-audiobook/
-   ```
-
-> [!TIP]
-> The app features automatic fallback: if local audio files take time to load on slower connections, it automatically streams directly from WordProject's high-speed CDN without interruption!
 
 ---
 
@@ -87,47 +72,23 @@ git push -u origin main
 
 | Shortcut | Action |
 | :--- | :--- |
-| <kbd>Space</kbd> | Play / Pause |
+| <kbd>Space</kbd> | Play / Pause (Starts & pauses continuous roll) |
 | <kbd>→</kbd> (Right Arrow) | Seek forward 10 seconds |
 | <kbd>←</kbd> (Left Arrow) | Seek backward 10 seconds |
 | <kbd>J</kbd> | Previous verse |
 | <kbd>K</kbd> | Next verse |
-| <kbd>L</kbd> | Toggle loop/repeat current verse |
+| <kbd>L</kbd> | Loop current verse |
 | <kbd>M</kbd> | Mute / Unmute audio |
-| <kbd>1</kbd> | Switch to **தமிழ் Mode** |
-| <kbd>2</kbd> | Switch to **English Mode** |
-| <kbd>3</kbd> | Switch to **Parallel Mode** |
-
----
-
-## 📊 Chapter Details & Verse Counts
-
-| Chapter | Tamil Title | English Title | Verses | Audio Duration |
-| :---: | :--- | :--- | :---: | :---: |
-| **1** | தேவன் குமாரன் மூலமாய்த் திருவுளம்பற்றுதல் | God's Supreme Revelation in His Son | 14 | 2m 45s |
-| **2** | பெரிய இரட்சிப்பு மற்றும் இயேசுவின் உபாதைகள் | The Great Salvation and Jesus' Suffering | 18 | 3m 45s |
-| **3** | மோசேயைப்பார்க்கிலும் கிறிஸ்து மேன்மையானவர் | Jesus Greater than Moses | 19 | 3m 16s |
-| **4** | விசுவாசிகளுக்கான தேவனுடைய இளைப்பாறுதல் | The Promised Rest for God's People | 16 | 3m 29s |
-| **5** | மெல்கிசேதேக்கின் முறைமையிலான பிரதான ஆசாரியர் | Christ the High Priest Forever | 14 | 2m 41s |
-| **6** | பக்குவமடைதலும் தேவனுடைய வாக்குத்தத்தமும் | Moving Forward to Maturity | 20 | 3m 49s |
-| **7** | மெல்கிசேதேக்கும் இயேசுவின் நித்திய ஆசாரியத்துவமும் | Melchizedek & Superior Priesthood | 28 | 5m 35s |
-| **8** | புது உடன்படிக்கையின் பிரதான ஆசாரியர் | Mediator of a Better Covenant | 13 | 3m 09s |
-| **9** | பூமிக்குரிய ஆசரிப்புக்கூடமும் கிறிஸ்துவின் இரத்தமும் | Earthly Tabernacle & Blood Sacrifice | 28 | 6m 15s |
-| **10** | ஒரேமுறை செலுத்தப்பட்ட பரிபூரண பலி | Christ's One Sacrifice Once for All | 39 | 6m 47s |
-| **11** | விசுவாசத்தின் மாபெரும் சாட்சிகள் | The Great Hall of Faith | 40 | 7m 28s |
-| **12** | விசுவாசத்தை துவக்குகிறவரும் முடிக்கிறவருமான இயேசு | Fixing Eyes on Jesus & Heavenly Zion | 29 | 5m 57s |
-| **13** | சகோதர சிநேகம், ஆராதனை மற்றும் இறுதி ஆசீர்வாதம் | Concluding Exhortations & Benediction | 25 | 4m 28s |
-| **Total** | **எபிரெயர் முழுவதும்** | **Entire Book of Hebrews** | **303 Verses** | **~59 Minutes** |
+| <kbd>F</kbd> | Toggle Fullscreen |
+| <kbd>1</kbd> | **தமிழ் Mode** |
+| <kbd>2</kbd> | **English Mode** |
+| <kbd>3</kbd> | **Parallel Mode** |
 
 ---
 
 ## 🛠️ Credits & Attribution
 
-- **Tamil Audio Narration**: [WordProject Audio Bible](https://www.wordproject.org/bibles/audio/30_tamil/b58.htm)
-- **Tamil Scripture Text**: Tamil Bible (பரிசுத்த வேதாகமம்)
-- **English Scripture Text & Narration**: King James Version (KJV) via WordProject
-- **Typography**: Google Fonts ([Noto Sans Tamil](https://fonts.google.com/specimen/Noto+Sans+Tamil) & [Mukta Malar](https://fonts.google.com/specimen/Mukta+Malar))
-
----
-
-*Made with dedication for Tamil Scripture listening and study.*
+- **Reference Video**: [Neethiyin Raja YouTube Tamil Audio Bible](https://www.youtube.com/watch?v=cIYwOF-rguY&list=PLCBPaXCvdmRbyartDrm5lnGWsza4hgXh-&index=1)
+- **Audio Source**: [WordProject Tamil Audio Bible](https://www.wordproject.org/bibles/audio/30_tamil/b58.htm)
+- **Scriptures**: Tamil Bible (பரிசுத்த வேதாகமம்) & King James Version (KJV)
+- **Typography**: Google Fonts ([Mukta Malar](https://fonts.google.com/specimen/Mukta+Malar) & [Noto Sans Tamil](https://fonts.google.com/specimen/Noto+Sans+Tamil))
