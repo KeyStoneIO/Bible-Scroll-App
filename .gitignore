@@ -5,3 +5,9 @@ Thumbs.db
 *.bak
 .vscode/
 .idea/
+
+# Audio alignment tool (tools/align_audio.py): local env, outputs, backups
+tools/.venv/
+tools/align_output/
+tools/backups/
+__pycache__/
