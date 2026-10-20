@@ -21,6 +21,8 @@
     isMuted: false,
     autoRoll: true,
     repeatVerse: false,
+    loopVerseNum: null,       // Verse being looped while repeatVerse is on
+    isScrubbing: false,       // True while dragging the progress bar
     theme: 'dark',
     fontSize: 22,
     isUserScrolling: false,
@@ -130,42 +132,79 @@
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   }
 
+  let toastTimer = null;
+
   function showToast(message, duration = 2200) {
     if (!el.toast) return;
     el.toast.textContent = message;
     el.toast.classList.add('is-visible');
-    setTimeout(() => {
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
       el.toast.classList.remove('is-visible');
     }, duration);
   }
 
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // Scroll writes made by the app are recorded so a 'scroll' event that
+  // doesn't match can be attributed to the user (scrollbar drag, keys, flings).
+  let lastProgrammaticScrollTop = 0;
+
+  function setScroll(y) {
+    if (!el.scrollViewport) return;
+    el.scrollViewport.scrollTop = y;
+    lastProgrammaticScrollTop = el.scrollViewport.scrollTop;
+  }
+
   // --- State Persistence ---
+  const VALID = {
+    theme: ['dark', 'light', 'sepia'],
+    displayMode: ['tamil', 'english', 'parallel'],
+    rollMode: ['steady', 'glide'],
+    viewMode: ['scroll', 'cards']
+  };
+
+  function save(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch (e) {
+      // Storage can be unavailable (private mode, quota); persistence is best-effort
+    }
+  }
+
   function loadPersistedState() {
     try {
       const savedTheme = localStorage.getItem('biblescroll_theme');
-      if (savedTheme) state.theme = savedTheme;
+      if (VALID.theme.includes(savedTheme)) state.theme = savedTheme;
 
       const savedMode = localStorage.getItem('biblescroll_mode');
-      if (savedMode) state.displayMode = savedMode;
+      if (VALID.displayMode.includes(savedMode)) state.displayMode = savedMode;
 
       const savedRoll = localStorage.getItem('biblescroll_rollmode');
-      if (savedRoll) state.rollMode = savedRoll;
+      if (VALID.rollMode.includes(savedRoll)) state.rollMode = savedRoll;
 
       const savedView = localStorage.getItem('biblescroll_view');
-      if (savedView) state.viewMode = savedView;
+      if (VALID.viewMode.includes(savedView)) state.viewMode = savedView;
 
       const savedBook = localStorage.getItem('biblescroll_book');
       if (savedBook && window.NT_DATA[savedBook]) {
         state.bookId = parseInt(savedBook, 10);
       }
 
-      const savedChapter = localStorage.getItem('biblescroll_ch');
-      if (savedChapter) {
-        state.chapter = parseInt(savedChapter, 10);
+      const savedChapter = parseInt(localStorage.getItem('biblescroll_ch'), 10);
+      if (savedChapter >= 1 && savedChapter <= getCurrentBook().total_chapters) {
+        state.chapter = savedChapter;
       }
 
-      const savedFont = localStorage.getItem('biblescroll_font');
-      if (savedFont) state.fontSize = parseInt(savedFont, 10);
+      const savedFont = parseInt(localStorage.getItem('biblescroll_font'), 10);
+      if (!isNaN(savedFont)) state.fontSize = savedFont;
     } catch (e) {
       console.warn('Storage read failed:', e);
     }
@@ -198,6 +237,40 @@
       console.warn('Audio load error for:', el.audio.src);
       showToast('Audio file loading, please check path');
     };
+
+    updateMediaSession();
+  }
+
+  // --- Lock Screen / Notification Controls (Media Session API) ---
+  function updateMediaSession() {
+    if (!('mediaSession' in navigator) || typeof MediaMetadata === 'undefined') return;
+    const book = getCurrentBook();
+    const chData = getCurrentChapterData();
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: `${book.name_ta} ${chData.chapter}`,
+      artist: `${book.name_en} ${chData.chapter}`,
+      album: 'Tamil New Testament • புதிய ஏற்பாடு'
+    });
+  }
+
+  function setupMediaSession() {
+    if (!('mediaSession' in navigator)) return;
+    const handlers = {
+      play: playAudio,
+      pause: pauseAudio,
+      previoustrack: () => prevChapter(),
+      nexttrack: () => nextChapter(),
+      seekbackward: () => seekBy(-10),
+      seekforward: () => seekBy(10),
+      seekto: (details) => { el.audio.currentTime = details.seekTime; }
+    };
+    Object.keys(handlers).forEach((action) => {
+      try {
+        navigator.mediaSession.setActionHandler(action, handlers[action]);
+      } catch (e) {
+        // Action not supported by this browser
+      }
+    });
   }
 
   // --- Render Chapter Verses ---
@@ -207,8 +280,9 @@
     if (!book || !chData) return;
 
     // Header Selectors
-    if (el.bookSelectLabel) el.bookSelectLabel.textContent = `${book.name_ta} • ${book.name_en}`;
-    if (el.chapterSelectLabel) el.chapterSelectLabel.textContent = `அதிகாரம் ${chData.chapter} (Ch ${chData.chapter})`;
+    // The .label-long parts are hidden on narrow screens
+    if (el.bookSelectLabel) el.bookSelectLabel.innerHTML = `${book.name_ta}<span class="label-long"> • ${book.name_en}</span>`;
+    if (el.chapterSelectLabel) el.chapterSelectLabel.innerHTML = `<span class="label-long">அதிகாரம் ${chData.chapter} (</span>Ch ${chData.chapter}<span class="label-long">)</span>`;
 
     // Scroll Header
     if (el.scrollTitleTa) el.scrollTitleTa.textContent = `${book.name_ta} ${chData.chapter}`;
@@ -262,19 +336,31 @@
     el.versesStream.appendChild(frag);
 
     // Reset scroll to top
-    if (el.scrollViewport) {
-      el.scrollViewport.scrollTop = 0;
-    }
+    setScroll(0);
+    state.activeVerseNum = null;
+    state.loopVerseNum = null;
 
     setupAudio();
     updateBookPickerHighlight();
     updateChapterPickerHighlight();
 
-    localStorage.setItem('biblescroll_book', state.bookId);
-    localStorage.setItem('biblescroll_ch', state.chapter);
+    save('biblescroll_book', state.bookId);
+    save('biblescroll_ch', state.chapter);
 
     // Recalculate geometric offsets for smooth roll interpolation
-    setTimeout(cacheVerseOffsets, 150);
+    cacheVerseOffsets();
+  }
+
+  // Layout can change after render (web fonts arriving, resizes, mode switches);
+  // coalesce those into one offset recalculation per frame.
+  let offsetCacheFrame = null;
+
+  function scheduleOffsetCache() {
+    if (offsetCacheFrame) return;
+    offsetCacheFrame = requestAnimationFrame(() => {
+      offsetCacheFrame = null;
+      cacheVerseOffsets();
+    });
   }
 
   // --- Cache Geometric Offsets for Continuous Rolling ---
@@ -292,7 +378,7 @@
       if (elem) {
         const rect = elem.getBoundingClientRect();
         // Target scroll to center the verse in the reading zone (42% from top of viewport)
-        const targetScroll = currentScroll + (rect.top - vpRect.top) - (vpRect.height * 0.40);
+        const targetScroll = currentScroll + (rect.top - vpRect.top) - (vpRect.height * 0.42);
         state.verseOffsets.push({
           verse: v.verse,
           start: v.start,
@@ -310,8 +396,11 @@
     if (animFrameId) cancelAnimationFrame(animFrameId);
 
     function tick() {
-      if (state.isPlaying && state.autoRoll && !state.isUserScrolling) {
-        updateContinuousScroll();
+      if (state.isPlaying) {
+        enforceVerseLoop();
+        if (state.autoRoll && !state.isUserScrolling) {
+          updateContinuousScroll();
+        }
       }
       animFrameId = requestAnimationFrame(tick);
     }
@@ -320,12 +409,25 @@
   }
 
   function updateContinuousScroll() {
-    const curTime = el.audio.currentTime;
+    const targetScroll = computeTargetScroll(el.audio.currentTime);
+    if (targetScroll === null) return;
+
+    // Apply exponential smoothing
+    const curScroll = el.scrollViewport.scrollTop;
+    const diff = targetScroll - curScroll;
+
+    if (Math.abs(diff) > 0.4) {
+      setScroll(curScroll + diff * 0.12);
+    }
+  }
+
+  // Where the viewport should be scrolled for a given audio time, or null if unknown
+  function computeTargetScroll(curTime) {
     const dur = el.audio.duration || getCurrentChapterData().duration;
-    if (!dur || dur <= 0 || !el.scrollViewport) return;
+    if (!dur || dur <= 0 || !el.scrollViewport) return null;
 
     const maxScroll = el.scrollViewport.scrollHeight - el.scrollViewport.clientHeight;
-    if (maxScroll <= 0) return;
+    if (maxScroll <= 0) return null;
 
     let targetScroll = 0;
 
@@ -372,28 +474,59 @@
       }
     }
 
-    // Apply exponential smoothing
-    const curScroll = el.scrollViewport.scrollTop;
-    const diff = targetScroll - curScroll;
+    return Math.min(targetScroll, maxScroll);
+  }
 
-    if (Math.abs(diff) > 0.4) {
-      el.scrollViewport.scrollTop = curScroll + diff * 0.12;
+  // --- Verse Looping ---
+  function findVerseAt(time) {
+    const chData = getCurrentChapterData();
+    return chData.verses.find((v) => time >= v.start && time < v.end) || null;
+  }
+
+  // Runs every frame and on timeupdate (which keeps firing in background tabs),
+  // so the jump back happens even when timeupdate events are 250ms apart.
+  function enforceVerseLoop() {
+    if (!state.repeatVerse || el.audio.paused) return;
+    const chData = getCurrentChapterData();
+    const curTime = el.audio.currentTime;
+
+    let loopV = chData.verses.find((v) => v.verse === state.loopVerseNum);
+    if (!loopV) {
+      loopV = findVerseAt(curTime);
+      if (!loopV) return;
+      state.loopVerseNum = loopV.verse;
+    }
+
+    if (curTime >= loopV.end - 0.05 && curTime < loopV.end + 1.0) {
+      el.audio.currentTime = loopV.start;
+    } else if (curTime < loopV.start - 0.25 || curTime >= loopV.end + 1.0) {
+      // The user seeked elsewhere: loop the verse they moved to instead
+      const moved = findVerseAt(curTime);
+      state.loopVerseNum = moved ? moved.verse : null;
     }
   }
 
   // --- Active Verse Focus & Audio Time Updates ---
-  function onAudioTimeUpdate() {
-    const curTime = el.audio.currentTime;
-    const dur = el.audio.duration || getCurrentChapterData().duration;
-
-    // Progress Bar
+  function updateProgressUI(curTime, dur) {
     if (dur > 0 && el.playerProgressBar) {
-      const pct = (curTime / dur) * 100;
+      const pct = Math.min((curTime / dur) * 100, 100);
       el.playerProgressBar.style.width = `${pct}%`;
     }
 
     if (el.playerCurTime) {
       el.playerCurTime.textContent = formatTime(curTime);
+    }
+  }
+
+  function onAudioTimeUpdate() {
+    enforceVerseLoop();
+
+    const curTime = el.audio.currentTime;
+    const dur = el.audio.duration || getCurrentChapterData().duration;
+
+    // Progress Bar (left alone while the user is dragging it)
+    if (!state.isScrubbing) {
+      updateProgressUI(curTime, dur);
     }
 
     // Buffered Bar
@@ -406,20 +539,9 @@
     const chData = getCurrentChapterData();
     if (!chData) return;
 
-    let matchedVerse = null;
-    for (const v of chData.verses) {
-      if (curTime >= v.start && curTime < v.end) {
-        matchedVerse = v;
-        break;
-      }
-    }
+    const matchedVerse = findVerseAt(curTime);
 
     if (matchedVerse) {
-      if (state.repeatVerse && curTime >= matchedVerse.end - 0.25) {
-        el.audio.currentTime = matchedVerse.start;
-        return;
-      }
-
       if (state.activeVerseNum !== matchedVerse.verse) {
         setActiveVerse(matchedVerse.verse);
       }
@@ -462,15 +584,28 @@
 
     el.audio.currentTime = v.start;
     setActiveVerse(verseNum);
+    if (state.repeatVerse) state.loopVerseNum = verseNum;
 
-    const offset = state.verseOffsets.find((o) => o.verse === verseNum);
-    if (offset && el.scrollViewport) {
-      el.scrollViewport.scrollTop = offset.targetY;
+    // Jump to where the roll engine itself would put this moment, so it doesn't
+    // drift back afterwards. With auto-roll off, just center the verse.
+    resumeAutoRoll();
+    cacheVerseOffsets();
+    const rollTarget = state.autoRoll ? computeTargetScroll(v.start) : null;
+    if (rollTarget !== null) {
+      setScroll(rollTarget);
+    } else {
+      const offset = state.verseOffsets.find((o) => o.verse === verseNum);
+      if (offset) setScroll(offset.targetY);
     }
 
     if (andPlay && el.audio.paused) {
       playAudio();
     }
+  }
+
+  function seekBy(seconds) {
+    const dur = el.audio.duration || getCurrentChapterData().duration;
+    el.audio.currentTime = Math.min(Math.max(el.audio.currentTime + seconds, 0), dur);
   }
 
   // --- Audio Control Functions ---
@@ -479,8 +614,10 @@
       state.isPlaying = true;
       updatePlayPauseUI();
     }).catch((err) => {
+      // AbortError just means the source changed before playback began
+      if (err.name === 'AbortError') return;
       console.warn('Playback error:', err);
-      showToast('Click anywhere to start playback');
+      showToast('Tap play to start playback');
     });
   }
 
@@ -509,36 +646,40 @@
   }
 
   // --- Navigation: Across Chapters and Books ---
-  function nextChapter() {
+  // forcePlay is needed on 'ended': the browser fires 'pause' just before it,
+  // so state.isPlaying is already false by then.
+  function nextChapter(forcePlay) {
+    const shouldPlay = forcePlay === true || state.isPlaying;
     const book = getCurrentBook();
     if (state.chapter < book.total_chapters) {
       state.chapter++;
       renderChapter();
-      if (state.isPlaying) playAudio();
+      if (shouldPlay) playAudio();
       showToast(`${book.name_ta} ${state.chapter}`);
     } else if (state.bookId < 27) {
       state.bookId++;
       state.chapter = 1;
       const nextBook = getCurrentBook();
       renderChapter();
-      if (state.isPlaying) playAudio();
+      if (shouldPlay) playAudio();
       showToast(`Next Book: ${nextBook.name_ta} 1`);
     }
   }
 
   function prevChapter() {
+    const shouldPlay = state.isPlaying;
     if (state.chapter > 1) {
       state.chapter--;
       const book = getCurrentBook();
       renderChapter();
-      if (state.isPlaying) playAudio();
+      if (shouldPlay) playAudio();
       showToast(`${book.name_ta} ${state.chapter}`);
     } else if (state.bookId > 1) {
       state.bookId--;
       const prevBook = getCurrentBook();
       state.chapter = prevBook.total_chapters;
       renderChapter();
-      if (state.isPlaying) playAudio();
+      if (shouldPlay) playAudio();
       showToast(`Previous Book: ${prevBook.name_ta} ${state.chapter}`);
     }
   }
@@ -555,21 +696,57 @@
 
   function toggleRepeatVerse() {
     state.repeatVerse = !state.repeatVerse;
+    // Loop the verse being heard now; during the intro, loop verse 1
+    const current = findVerseAt(el.audio.currentTime);
+    state.loopVerseNum = state.repeatVerse
+      ? (current ? current.verse : (state.activeVerseNum || 1))
+      : null;
     if (el.btnRepeatVerse) el.btnRepeatVerse.classList.toggle('is-active', state.repeatVerse);
     showToast(state.repeatVerse ? 'Looping Current Verse' : 'Verse Looping Off');
+  }
+
+  // --- Volume & Mute ---
+  const ICON_VOLUME = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
+  const ICON_MUTED = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
+
+  function isSilent() {
+    return state.isMuted || state.volume === 0;
+  }
+
+  function setMuted(muted) {
+    state.isMuted = muted;
+    el.audio.muted = muted;
+    // Unmuting with the slider at zero would still be silent, so restore volume
+    if (!muted && state.volume === 0) {
+      state.volume = 1;
+      el.audio.volume = 1;
+      if (el.volumeSlider) el.volumeSlider.value = 1;
+    }
+    updateMuteUI();
+  }
+
+  function toggleMute() {
+    setMuted(!isSilent());
+    showToast(isSilent() ? 'Muted' : 'Unmuted');
+  }
+
+  function updateMuteUI() {
+    if (!el.btnMute) return;
+    el.btnMute.innerHTML = isSilent() ? ICON_MUTED : ICON_VOLUME;
+    el.btnMute.classList.toggle('is-active', isSilent());
   }
 
   function toggleRollMode() {
     state.rollMode = state.rollMode === 'steady' ? 'glide' : 'steady';
     updateRollModeUI();
-    localStorage.setItem('biblescroll_rollmode', state.rollMode);
+    save('biblescroll_rollmode', state.rollMode);
     showToast(state.rollMode === 'steady' ? 'Mode: Steady Tempo Roll (YouTube Style)' : 'Mode: Audio-Synced Glide');
   }
 
   function setRollMode(mode) {
     state.rollMode = mode;
     updateRollModeUI();
-    localStorage.setItem('biblescroll_rollmode', mode);
+    save('biblescroll_rollmode', mode);
   }
 
   function updateRollModeUI() {
@@ -591,7 +768,7 @@
   function setDisplayMode(mode) {
     state.displayMode = mode;
     document.body.dataset.mode = mode;
-    localStorage.setItem('biblescroll_mode', mode);
+    save('biblescroll_mode', mode);
 
     [el.btnModeTamil, el.btnModeEnglish, el.btnModeParallel].forEach((btn) => {
       if (btn) btn.classList.remove('is-active');
@@ -601,19 +778,19 @@
     if (mode === 'english' && el.btnModeEnglish) el.btnModeEnglish.classList.add('is-active');
     if (mode === 'parallel' && el.btnModeParallel) el.btnModeParallel.classList.add('is-active');
 
-    setTimeout(cacheVerseOffsets, 100);
+    scheduleOffsetCache();
   }
 
-  function setViewMode(view) {
+  function setViewMode(view, silent) {
     state.viewMode = view;
     document.body.dataset.view = view;
-    localStorage.setItem('biblescroll_view', view);
+    save('biblescroll_view', view);
 
     if (el.btnViewScroll) el.btnViewScroll.classList.toggle('is-active', view === 'scroll');
     if (el.btnViewCards) el.btnViewCards.classList.toggle('is-active', view === 'cards');
 
-    setTimeout(cacheVerseOffsets, 100);
-    showToast(view === 'scroll' ? 'Cinematic Scroll View' : 'Card Reader View');
+    scheduleOffsetCache();
+    if (!silent) showToast(view === 'scroll' ? 'Cinematic Scroll View' : 'Card Reader View');
   }
 
   function toggleFullscreen() {
@@ -657,7 +834,8 @@
         const b = window.NT_DATA[String(id)];
         if (!b) continue;
 
-        const tile = document.createElement('div');
+        const tile = document.createElement('button');
+        tile.type = 'button';
         tile.className = `book-tile ${id === state.bookId ? 'is-active' : ''}`;
         tile.dataset.bookId = id;
         tile.innerHTML = `
@@ -698,7 +876,8 @@
     if (!book) return;
 
     for (let c = 1; c <= book.total_chapters; c++) {
-      const tile = document.createElement('div');
+      const tile = document.createElement('button');
+      tile.type = 'button';
       tile.className = `chapter-tile ${c === state.chapter ? 'is-active' : ''}`;
       tile.textContent = c;
 
@@ -765,7 +944,7 @@
     }
 
     if (matches.length === 0) {
-      el.searchResults.innerHTML = `<div style="color:var(--text-muted); text-align:center; padding:1.5rem;">No verses found matching "<strong>${q}</strong>"</div>`;
+      el.searchResults.innerHTML = `<div style="color:var(--text-muted); text-align:center; padding:1.5rem;">No verses found matching "<strong>${escapeHtml(q)}</strong>"</div>`;
       return;
     }
 
@@ -792,9 +971,7 @@
         state.chapter = m.chapter;
         renderChapter();
         closeModal(el.searchModal);
-        setTimeout(() => {
-          seekToVerse(m.verse, true);
-        }, 150);
+        seekToVerse(m.verse, true);
       });
 
       frag.appendChild(item);
@@ -803,8 +980,11 @@
     el.searchResults.appendChild(frag);
   }
 
+  // Returns HTML: both text and term are escaped before the <mark> is added
   function highlightTerm(text, term) {
+    text = escapeHtml(text);
     if (!term) return text;
+    term = escapeHtml(term);
     const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
     return text.replace(regex, '<mark style="background:var(--accent-glow); color:inherit; border-radius:2px; padding:0 2px;">$1</mark>');
   }
@@ -813,7 +993,13 @@
   function setTheme(theme) {
     state.theme = theme;
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('biblescroll_theme', theme);
+    save('biblescroll_theme', theme);
+
+    // Match the mobile browser chrome to the header color
+    const themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeMeta) {
+      themeMeta.setAttribute('content', getComputedStyle(document.documentElement).getPropertyValue('--bg-secondary').trim());
+    }
 
     [el.btnThemeDark, el.btnThemeLight, el.btnThemeSepia].forEach((btn) => {
       if (btn) btn.classList.remove('is-active');
@@ -828,8 +1014,8 @@
     state.fontSize = Math.min(Math.max(size, 16), 34);
     document.documentElement.style.setProperty('--font-size-base', `${state.fontSize}px`);
     if (el.fontSizeValue) el.fontSizeValue.textContent = `${state.fontSize}px`;
-    localStorage.setItem('biblescroll_font', state.fontSize);
-    setTimeout(cacheVerseOffsets, 100);
+    save('biblescroll_font', state.fontSize);
+    scheduleOffsetCache();
   }
 
   // --- Modal Helpers ---
@@ -841,9 +1027,20 @@
     if (modal) modal.classList.remove('is-open');
   }
 
+  function getOpenModal() {
+    return document.querySelector('.modal-overlay.is-open');
+  }
+
   // --- Keyboard Shortcuts ---
   function setupKeyboardShortcuts() {
     window.addEventListener('keydown', (e) => {
+      const openModalEl = getOpenModal();
+      if (e.code === 'Escape' && openModalEl) {
+        closeModal(openModalEl);
+        return;
+      }
+      // Player shortcuts are off while a dialog is open or a field has focus
+      if (openModalEl) return;
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
       switch (e.code) {
@@ -853,11 +1050,11 @@
           break;
         case 'ArrowRight':
           e.preventDefault();
-          el.audio.currentTime = Math.min(el.audio.currentTime + 10, el.audio.duration || 9999);
+          seekBy(10);
           break;
         case 'ArrowLeft':
           e.preventDefault();
-          el.audio.currentTime = Math.max(el.audio.currentTime - 10, 0);
+          seekBy(-10);
           break;
         case 'BracketLeft':
           e.preventDefault();
@@ -869,9 +1066,7 @@
           break;
         case 'KeyM':
           e.preventDefault();
-          state.isMuted = !state.isMuted;
-          el.audio.muted = state.isMuted;
-          showToast(state.isMuted ? 'Muted' : 'Unmuted');
+          toggleMute();
           break;
         case 'KeyL':
           e.preventDefault();
@@ -908,12 +1103,12 @@
     });
     el.audio.addEventListener('ended', () => {
       if (state.repeatVerse) {
-        seekToVerse(state.activeVerseNum || 1, true);
+        seekToVerse(state.loopVerseNum || state.activeVerseNum || 1, true);
       } else {
         const book = getCurrentBook();
         if (state.chapter < book.total_chapters || state.bookId < 27) {
           showToast(`Chapter completed. Rolling next chapter...`);
-          nextChapter();
+          nextChapter(true);
         } else {
           pauseAudio();
           showToast('You have completed the entire New Testament!');
@@ -921,27 +1116,22 @@
       }
     });
 
-    // Detect User Manual Scroll in Viewport
+    // Detect User Manual Scroll in Viewport. touchmove rather than touchstart,
+    // so tapping a verse doesn't pause the roll.
     if (el.scrollViewport) {
       el.scrollViewport.addEventListener('wheel', handleUserScroll, { passive: true });
-      el.scrollViewport.addEventListener('touchstart', handleUserScroll, { passive: true });
-    }
-
-    function handleUserScroll() {
-      state.isUserScrolling = true;
-      if (el.resumeRollBanner) el.resumeRollBanner.classList.add('is-visible');
-
-      clearTimeout(state.userScrollTimer);
-      state.userScrollTimer = setTimeout(() => {
-        state.isUserScrolling = false;
-        if (el.resumeRollBanner) el.resumeRollBanner.classList.remove('is-visible');
-      }, 3500);
+      el.scrollViewport.addEventListener('touchmove', handleUserScroll, { passive: true });
+      // Catches scrollbar drags, keyboard scrolling and touch momentum
+      el.scrollViewport.addEventListener('scroll', () => {
+        if (Math.abs(el.scrollViewport.scrollTop - lastProgrammaticScrollTop) > 2) {
+          handleUserScroll();
+        }
+      }, { passive: true });
     }
 
     if (el.btnResumeRoll) {
       el.btnResumeRoll.addEventListener('click', () => {
-        state.isUserScrolling = false;
-        if (el.resumeRollBanner) el.resumeRollBanner.classList.remove('is-visible');
+        resumeAutoRoll();
         showToast('Auto-Roll Resumed');
       });
     }
@@ -986,39 +1176,68 @@
 
     // Player Buttons
     if (el.btnPlayPause) el.btnPlayPause.addEventListener('click', togglePlayPause);
-    if (el.btnPrevChapter) el.btnPrevChapter.addEventListener('click', prevChapter);
-    if (el.btnNextChapter) el.btnNextChapter.addEventListener('click', nextChapter);
-    if (el.btnRewind10) el.btnRewind10.addEventListener('click', () => {
-      el.audio.currentTime = Math.max(el.audio.currentTime - 10, 0);
-    });
-    if (el.btnForward10) el.btnForward10.addEventListener('click', () => {
-      el.audio.currentTime = Math.min(el.audio.currentTime + 10, el.audio.duration || 9999);
-    });
+    // Wrapped so the click event isn't passed as nextChapter's forcePlay argument
+    if (el.btnPrevChapter) el.btnPrevChapter.addEventListener('click', () => prevChapter());
+    if (el.btnNextChapter) el.btnNextChapter.addEventListener('click', () => nextChapter());
+    if (el.btnRewind10) el.btnRewind10.addEventListener('click', () => seekBy(-10));
+    if (el.btnForward10) el.btnForward10.addEventListener('click', () => seekBy(10));
     if (el.btnRepeatVerse) el.btnRepeatVerse.addEventListener('click', toggleRepeatVerse);
     if (el.btnScrollToggle) el.btnScrollToggle.addEventListener('click', toggleAutoRoll);
     if (el.btnSpeed) el.btnSpeed.addEventListener('click', cycleSpeed);
 
     // Outro Buttons
-    if (el.btnOutroPrev) el.btnOutroPrev.addEventListener('click', prevChapter);
-    if (el.btnOutroNext) el.btnOutroNext.addEventListener('click', nextChapter);
+    if (el.btnOutroPrev) el.btnOutroPrev.addEventListener('click', () => prevChapter());
+    if (el.btnOutroNext) el.btnOutroNext.addEventListener('click', () => nextChapter());
     if (el.btnOutroReplay) el.btnOutroReplay.addEventListener('click', () => {
       el.audio.currentTime = 0;
-      if (el.scrollViewport) el.scrollViewport.scrollTop = 0;
+      resumeAutoRoll();
+      setScroll(0);
       playAudio();
     });
 
-    // Scrubber Drag & Click
+    // Scrubber: tap or drag (mouse and touch). The bar previews while dragging;
+    // the audio seeks once on release.
     if (el.playerProgressWrap) {
-      el.playerProgressWrap.addEventListener('click', (e) => {
+      const timeAtPointer = (e) => {
         const rect = el.playerProgressWrap.getBoundingClientRect();
-        const clickX = e.clientX - rect.left;
-        const width = rect.width;
+        const ratio = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
         const dur = el.audio.duration || getCurrentChapterData().duration;
-        if (dur > 0) {
-          el.audio.currentTime = (clickX / width) * dur;
-          updateContinuousScroll();
+        return { time: ratio * dur, dur };
+      };
+
+      el.playerProgressWrap.addEventListener('pointerdown', (e) => {
+        state.isScrubbing = true;
+        el.playerProgressWrap.classList.add('is-scrubbing');
+        try {
+          el.playerProgressWrap.setPointerCapture(e.pointerId);
+        } catch (err) {
+          // Pointer already released; the drag still works without capture
         }
+        const { time, dur } = timeAtPointer(e);
+        updateProgressUI(time, dur);
       });
+
+      el.playerProgressWrap.addEventListener('pointermove', (e) => {
+        if (!state.isScrubbing) return;
+        const { time, dur } = timeAtPointer(e);
+        updateProgressUI(time, dur);
+      });
+
+      const endScrub = (e, commit) => {
+        if (!state.isScrubbing) return;
+        state.isScrubbing = false;
+        el.playerProgressWrap.classList.remove('is-scrubbing');
+        if (!commit) return;
+        const { time, dur } = timeAtPointer(e);
+        if (dur > 0) {
+          el.audio.currentTime = time;
+          resumeAutoRoll();
+          const target = computeTargetScroll(time);
+          if (target !== null && state.autoRoll) setScroll(target);
+        }
+      };
+      el.playerProgressWrap.addEventListener('pointerup', (e) => endScrub(e, true));
+      el.playerProgressWrap.addEventListener('pointercancel', (e) => endScrub(e, false));
     }
 
     // Volume & Mute
@@ -1027,16 +1246,14 @@
         const val = parseFloat(e.target.value);
         state.volume = val;
         el.audio.volume = val;
-        state.isMuted = val === 0;
+        if (val > 0 && state.isMuted) {
+          state.isMuted = false;
+          el.audio.muted = false;
+        }
+        updateMuteUI();
       });
     }
-    if (el.btnMute) {
-      el.btnMute.addEventListener('click', () => {
-        state.isMuted = !state.isMuted;
-        el.audio.muted = state.isMuted;
-        showToast(state.isMuted ? 'Muted' : 'Unmuted');
-      });
-    }
+    if (el.btnMute) el.btnMute.addEventListener('click', toggleMute);
 
     // Search
     if (el.btnSearchOpen) el.btnSearchOpen.addEventListener('click', () => {
@@ -1079,10 +1296,38 @@
       });
     }
 
-    // Window Resize
-    window.addEventListener('resize', () => {
-      setTimeout(cacheVerseOffsets, 150);
-    });
+    // Layout changes: window/viewport resizes (incl. mobile address bar),
+    // verse text reflowing (web fonts loading, font size, display mode)
+    window.addEventListener('resize', scheduleOffsetCache);
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(scheduleOffsetCache);
+    }
+    if (typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(scheduleOffsetCache).observe(el.versesStream);
+
+      // Keep toasts just above the player bar, whose height varies by screen size
+      const playerBar = document.querySelector('.player-bar-container');
+      if (playerBar) {
+        new ResizeObserver(() => {
+          document.documentElement.style.setProperty('--player-offset', `${playerBar.offsetHeight}px`);
+        }).observe(playerBar);
+      }
+    }
+  }
+
+  // --- Manual Scroll Handling ---
+  function handleUserScroll() {
+    state.isUserScrolling = true;
+    if (el.resumeRollBanner) el.resumeRollBanner.classList.add('is-visible');
+
+    clearTimeout(state.userScrollTimer);
+    state.userScrollTimer = setTimeout(resumeAutoRoll, 3500);
+  }
+
+  function resumeAutoRoll() {
+    clearTimeout(state.userScrollTimer);
+    state.isUserScrolling = false;
+    if (el.resumeRollBanner) el.resumeRollBanner.classList.remove('is-visible');
   }
 
   // --- Bootstrap ---
@@ -1091,7 +1336,7 @@
     setTheme(state.theme);
     setFontSize(state.fontSize);
     setDisplayMode(state.displayMode);
-    setViewMode(state.viewMode);
+    setViewMode(state.viewMode, true);
     updateRollModeUI();
     buildBookPicker();
     buildChapterPicker();
@@ -1099,6 +1344,8 @@
     setupSearch();
     setupKeyboardShortcuts();
     initEventListeners();
+    setupMediaSession();
+    updateMuteUI();
     startRollLoop();
     console.log('Bible Scroll App (Full New Testament Edition) initialized.');
   }

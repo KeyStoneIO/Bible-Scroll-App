@@ -2,7 +2,11 @@
 <html lang="ta" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#121820">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Bible Scroll App | தமிழ் புதிய ஏற்பாடு • Tamil New Testament Audio Bible</title>
   <meta name="description" content="Cinematic rolling scripture scroll and Tamil Audio Bible webapp for the entire New Testament (27 books, 260 chapters). Smooth roll synced to Tamil audio narration with English reference.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📜</text></svg>">
@@ -207,7 +211,7 @@
        ======================================================================== -->
   <footer class="player-bar-container" role="region" aria-label="Audiobook Player">
     <!-- Progress Bar Scrubber with Smooth Roll Scrubbing -->
-    <div id="playerProgressWrap" class="player-progress-wrap" title="Drag to Seek Audio and Scroll Position">
+    <div id="playerProgressWrap" class="player-progress-wrap" title="Tap or drag to seek">
       <div id="playerBufferedBar" class="player-progress-buffered"></div>
       <div id="playerProgressBar" class="player-progress-current">
         <span class="player-progress-handle"></span>
@@ -445,7 +449,7 @@
           </div>
 
           <!-- Keyboard Shortcuts Summary -->
-          <div class="settings-group" style="margin-top: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+          <div class="settings-group settings-shortcuts" style="margin-top: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
             <span class="settings-group-label">Keyboard Shortcuts</span>
             <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.6;">
               <div><kbd>Space</kbd> Play / Pause (Starts & stops the roll)</div>
