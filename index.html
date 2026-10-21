@@ -7,8 +7,8 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Bible Scroll App | தமிழ் புதிய ஏற்பாடு • Tamil New Testament Audio Bible</title>
-  <meta name="description" content="Cinematic rolling scripture scroll and Tamil Audio Bible webapp for the entire New Testament (27 books, 260 chapters). Smooth roll synced to Tamil audio narration with English reference.">
+  <title>Bible Scroll App | திருவிவிலியம் • Tamil Holy Bible (66 Books)</title>
+  <meta name="description" content="Cinematic rolling scripture scroll and Tamil Audio Bible webapp for the entire Holy Bible (66 books, 1,189 chapters). Old Testament & New Testament synced to Tamil audio narration with English KJV reference.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📜</text></svg>">
   
   <!-- Google Fonts for Tamil & English Typography -->
@@ -37,20 +37,20 @@
         </svg>
       </div>
       <div class="brand-title-wrap">
-        <h1 class="brand-title">Bible Scroll • புதிய ஏற்பாடு</h1>
-        <span class="brand-subtitle">Tamil New Testament • 27 Books</span>
+        <h1 class="brand-title">Bible Scroll • திருவிவிலியம்</h1>
+        <span class="brand-subtitle">Tamil Holy Bible • 66 Books (பழைய & புதிய ஏற்பாடு)</span>
       </div>
     </div>
 
     <!-- Navigation Selectors & Tools -->
     <div class="header-actions">
       <!-- Book Selector Dropdown -->
-      <button id="bookSelectBtn" class="nav-select-btn" title="Choose Book from New Testament (27 Books)">
+      <button id="bookSelectBtn" class="nav-select-btn" title="Choose Book from Holy Bible (66 Books)">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
         </svg>
-        <span id="bookSelectLabel">மத்தேயு • Matthew</span>
+        <span id="bookSelectLabel">ஆதியாகமம் • Genesis</span>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="6 9 12 15 18 9"></polyline>
         </svg>
@@ -318,11 +318,11 @@
        Modals: Book Selector, Chapter Selector, Search, Settings
        ======================================================================== -->
   
-  <!-- Book Picker Modal (All 27 New Testament Books) -->
+  <!-- Book Picker Modal (All 66 Holy Bible Books) -->
   <div id="bookModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="bookModalTitle">
-    <div class="modal-card" style="max-width: 780px;">
+    <div class="modal-card" style="max-width: 840px;">
       <div class="modal-header">
-        <h3 id="bookModalTitle" class="modal-title">Select Book (புதிய ஏற்பாடு • 27 Books)</h3>
+        <h3 id="bookModalTitle" class="modal-title">Select Book • வேதப் புத்தகங்கள் (66 Books)</h3>
         <button id="closeBookModalBtn" class="icon-btn" title="Close">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -331,8 +331,23 @@
         </button>
       </div>
       <div class="modal-body">
+        <!-- Toolbar: Search & Testament Tabs -->
+        <div class="book-modal-toolbar">
+          <div class="book-search-wrap">
+            <svg class="book-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="bookSearchInput" class="book-search-input" placeholder="Search book by name (e.g. ஆதியாகமம், Genesis, சங்கீதம், Psalms, யோவான், John)...">
+          </div>
+          <div class="testament-tabs-bar">
+            <button id="tabTestamentAll" class="testament-tab-btn is-active">All (66)</button>
+            <button id="tabTestamentOT" class="testament-tab-btn">பழைய ஏற்பாடு • OT (39)</button>
+            <button id="tabTestamentNT" class="testament-tab-btn">புதிய ஏற்பாடு • NT (27)</button>
+          </div>
+        </div>
         <div id="bookCategoryList" class="book-category-container">
-          <!-- Dynamically filled by app.js with categories (Gospels, History, Epistles, Revelation) -->
+          <!-- Dynamically filled by app.js with categories -->
         </div>
       </div>
     </div>
@@ -448,6 +463,15 @@
             </label>
           </div>
 
+          <!-- Audio CDN / Cloud Storage Configuration (Optional) -->
+          <div class="settings-group">
+            <span class="settings-group-label">Audio Storage Location / ஆடியோ ஆதாரம்</span>
+            <div style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 6px;">
+              Default: Local repository files (<code>audio_ot/</code> & <code>audio_nt/</code>).
+            </div>
+            <input type="text" id="cdnBaseInput" class="search-field" style="font-size: 0.8rem; padding: 0.5rem 0.75rem;" placeholder="Optional CDN Base URL (e.g. https://pub-xxx.r2.dev/)">
+          </div>
+
           <!-- Keyboard Shortcuts Summary -->
           <div class="settings-group settings-shortcuts" style="margin-top: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
             <span class="settings-group-label">Keyboard Shortcuts</span>
@@ -469,9 +493,9 @@
   <!-- Toast Notice -->
   <div id="toastNotice" class="toast-notice" role="status" aria-live="polite"></div>
 
-  <!-- Scripts: Manifest, Data, and App Engine -->
-  <script src="js/nt_manifest.js"></script>
-  <script src="js/nt_data.js"></script>
-  <script src="js/app.js"></script>
+  <!-- Scripts: Complete Bible Manifest, Default Preloaded Book, and App Engine -->
+  <script src="js/bible_manifest.js?v=3.0"></script>
+  <script src="data/books/b01.js?v=3.0"></script>
+  <script src="js/app.js?v=3.0"></script>
 </body>
 </html>

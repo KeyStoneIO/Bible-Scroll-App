@@ -1016,8 +1016,86 @@ body[data-view="cards"] .scroll-verse-item.is-active {
 }
 
 /* ==========================================================================
-   Book Selector Categorized Grid
+   Book Selector Categorized Grid & Testament Tabs
    ========================================================================== */
+.book-modal-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  position: sticky;
+  top: -1.25rem;
+  background-color: var(--bg-surface);
+  padding: 0.5rem 0;
+  z-index: 5;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.testament-tabs-bar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.testament-tab-btn {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.45rem 0.95rem;
+  border-radius: var(--radius-full);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.testament-tab-btn:hover {
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+.testament-tab-btn.is-active {
+  background-color: var(--accent-gold);
+  border-color: var(--accent-gold);
+  color: #0b0f19;
+  font-weight: 700;
+}
+
+.book-search-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.book-search-input {
+  width: 100%;
+  padding: 0.6rem 0.9rem 0.6rem 2.2rem;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.book-search-input:focus {
+  border-color: var(--accent-gold);
+  background-color: var(--bg-elevated);
+}
+
+.book-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
 .book-category-container {
   display: flex;
   flex-direction: column;
